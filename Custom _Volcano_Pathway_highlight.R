@@ -1,5 +1,5 @@
 #Volcano
-volcano_data <- B1_2Months_APOE4_vs_APOE3
+volcano_data <- read.xlsx(paste0(DRIRECTORY/NAME_OF_FILE))
 volcano_data$log_pval <- -log10(volcano_data$p_val)
 
 UP_data <- volcano_data %>% filter(p_val < 0.05 & avg_log2FC > 0)
