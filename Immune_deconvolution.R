@@ -2,12 +2,9 @@
 install.packages("remotes")
 remotes::install_github("grst/immunedeconv")
 library(immunedeconv)
-set_cibersort_binary("/path/to/CIBERSORT.R")
-set_cibersort_mat("/path/to/LM22.txt")
 #load expression matrix
 imm_deconv_data <- read.xlsx(paste0('results/', 'All_data_', 'DS_counts.xlsx'), rowNames = T)
 imm_deconv_data <- read.xlsx(paste0('results/', 'All_data_', 'DEGene_counts_pval05.xlsx'), rowNames = T)
-
 
 #Pseudobulk RNA-seq analysis
 immune_dev_res <- immunedeconv::deconvolute(imm_deconv_data, "quantiseq")
