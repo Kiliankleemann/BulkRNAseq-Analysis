@@ -1,6 +1,4 @@
 #Barplots
-BiocManager::install('ggsignif')
-BiocManager::install('ggpubr')
 library(ggsignif)
 library(ggpubr)
 library(cowplot)
@@ -13,15 +11,7 @@ comparisons <- goi_data3 %>%
 goi <- c('Esr1','Cx3cr1','Stat1','Clec7a','Axl')
 goi_data <-  sig_export %>% filter(gene %in% c(goi))
 goi_data2 <- rename(goi_data, 
-                    'NonPhag-WT-IgG_' = contains('Non_phag_WT_IgG'),
-                    'NonPhag-WT-Blocker_' = contains('Non_phag_WT_Blocker'),
-                    'NonPhag-miR155cKO-IgG_' = contains('Non_phag_miR155cKO_IgG'),
-                    'NonPhag-miR155cKO-Blocker_' = contains('Non_phag_miR155cKO_Blocker'),
-                    'Phagocytic-WT-IgG_' = contains('Phagocytic_WT_IgG'),
-                    'Phagocytic-WT-Blocker_' = contains('Phagocytic_WT_Blocker'),
-                    'Phagocytic-miR155cKO-IgG_' = contains('Phagocytic_miR155cKO_IgG'),
-                    'Phagocytic-miR155cKO-Blocker_' = contains('Phagocytic_miR155cKO_Blocker')
-                   ) 
+                    'Header1_' = contains('Header1')) 
 
 for (i in goi) { 
   goi_data3 <- goi_data2 %>% filter(gene == i) %>% pivot_longer(
