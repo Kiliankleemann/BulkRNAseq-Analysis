@@ -1,3 +1,17 @@
+#### -------- INSTALLING AND LOADING PACKAGES ------- ####
+list.of.packages <- c("BiocGenerics","tximport","S4Vectors", "DESeq2", "biomaRt",
+                      "ggplot2", "ggsignif", "ggpubr", "sva", "devtools", "org.Hs.eg.db", 
+                      "org.Mm.eg.db", "limma","stringr","KEGGREST","ggrepel", "openxlsx",
+                      "fgsea","clusterProfiler","pheatmap","ggpubr","cowplot",'dplyr',
+                      "RColorBrewer",'AnnotationDbi', 'tidyverse','pheatmap', 'dendextend')
+
+new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
+if(length(new.packages)) install.packages(new.packages)
+if(length(new.packages)) BiocManager::install(new.packages)
+
+# Packages loading
+invisible(lapply(list.of.packages, library, character.only = TRUE))
+
 ###---------------------------------FILE PREPARATION----------------------------------##
 ## useMart is a function used to connect to the selected BioMart database and dataset (ListEnsemblArchives() to list host sites)
 ensembl_ms_mart <- useMart(biomart="ensembl", dataset="mmusculus_gene_ensembl")
