@@ -40,8 +40,7 @@ tx2gene <- ensembl_df %>%
 # ## Create a metadata map using your metadata file.
 # # metadata <- read.xlsx("metadata.xlsx", sheet = 1) %>% remove_missing()
 sample_data <- read.xlsx("metadata.xlsx", sheet = 1)
-sample_data$Sample_ID <- sample_data$sample.ID
-sample_data[,-1]
+
 # Outlier filtering  and subsetting(if necessary)
 outliers = c('B3')
 sample_data <- sample_data %>%            # Filter sample_data sheet
