@@ -2,7 +2,7 @@
 list.of.packages <- c("BiocGenerics","tximport","S4Vectors", "DESeq2", "biomaRt",
                       "ggplot2", "ggsignif", "ggpubr", "sva", "devtools", "org.Hs.eg.db", 
                       "org.Mm.eg.db", "limma","stringr","KEGGREST","ggrepel", "openxlsx",
-                      "fgsea","clusterProfiler","pheatmap","ggpubr","cowplot",'dplyr',
+                      "fgsea","clusterProfiler","pheatmap","ggpubr","cowplot",'dplyr','janitor',
                       "RColorBrewer",'AnnotationDbi', 'tidyverse','pheatmap', 'dendextend')
 
 new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
@@ -13,19 +13,28 @@ if(length(new.packages)) BiocManager::install(new.packages)
 invisible(lapply(list.of.packages, library, character.only = TRUE))
 
 
+###### ----- SETTING WORK DIRECTORY -----#####
+setwd("/media/kilian/OS/Astrocytes_SIRT1KO/")
+
+
 
 ###### ----- FILE PREPARATION -----#####
 # Create a metadata map using your metadata file.
-sample_data <- read.xlsx("metadata_2.xlsx", sheet = 1)
-outliers = c('101153', '101146','101147')
+sample_data <- read.xlsx("metadata.xlsx", sheet = 1)
+outliers = c('')
 sample_data <- sample_data %>%            
   filter(!Sample_ID %in% outliers)
 
 #Import TEtranscript counts
-TEtranscript_multi_counts <- read.xlsx(paste0('TETranscripts_multi/TEtranscripts_counts.xlsx')) %>% column_to_rownames('gene/TE')
-colClean1 <- function(TEtranscript_multi_counts){ colnames(TEtranscript_multi_counts) <- gsub("_1Aligned.sortedByCoord.out.bam.T", "", colnames(TEtranscript_multi_counts)); TEtranscript_multi_counts } 
-colClean2 <- function(TEtranscript_multi_counts){ colnames(TEtranscript_multi_counts) <- gsub("_1Aligned.sortedByCoord.out.bam.C", "", colnames(TEtranscript_multi_counts)); TEtranscript_multi_counts } 
-colClean3 <- function(TEtranscript_multi_counts){ colnames(TEtranscript_multi_counts) <- gsub(".*?LABR", "", colnames(TEtranscript_multi_counts)); TEtranscript_multi_counts } 
+TEtranscript_multi_counts <- read.table(paste0('TETranscripts_multi/TEtranscripts_out.cntTable')) %>% row_to_names(row_number = 1)  
+TEtranscript_multi_counts <- TEtranscript_multi_counts %>% column_to_rownames('gene/TE')
+TEtranscript_multi_counts2 <- TEtranscript_multi_counts[,-1]
+rownames(TEtranscript_multi_counts2) <- TEtranscript_multi_counts[,1]
+TEtranscript_multi_counts <- TEtranscript_multi_counts2
+
+colClean1 <- function(TEtranscript_multi_counts){ colnames(TEtranscript_multi_counts) <- gsub("Aligned.sortedByCoord.out.bam.T", "", colnames(TEtranscript_multi_counts)); TEtranscript_multi_counts } 
+colClean2 <- function(TEtranscript_multi_counts){ colnames(TEtranscript_multi_counts) <- gsub("Aligned.sortedByCoord.out.bam.C", "", colnames(TEtranscript_multi_counts)); TEtranscript_multi_counts } 
+colClean3 <- function(TEtranscript_multi_counts){ colnames(TEtranscript_multi_counts) <- gsub(".*?multi/", "", colnames(TEtranscript_multi_counts)); TEtranscript_multi_counts } 
 
 TEtranscript_multi_counts <- colClean1(TEtranscript_multi_counts)
 TEtranscript_multi_counts <- colClean2(TEtranscript_multi_counts)
