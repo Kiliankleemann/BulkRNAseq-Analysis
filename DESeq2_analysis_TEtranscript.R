@@ -15,6 +15,11 @@ invisible(lapply(list.of.packages, library, character.only = TRUE))
 
 ###### ----- SETTING WORK DIRECTORY -----#####
 setwd("//")
+dir.create('results')
+dir.create('plots')
+dir.create('plots/PCA')
+dir.create('plots/barplots')
+dir.create('plots/heatmaps')
 
 
 
