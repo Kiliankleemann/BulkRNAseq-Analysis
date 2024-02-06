@@ -14,7 +14,7 @@ invisible(lapply(list.of.packages, library, character.only = TRUE))
 
 
 ###### ----- SETTING WORK DIRECTORY -----#####
-setwd("/media/kilian/OS/Astrocytes_SIRT1KO/")
+setwd("//")
 
 
 
