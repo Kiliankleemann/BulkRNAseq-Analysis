@@ -1,7 +1,7 @@
 #### -------- INSTALLING AND LOADING PACKAGES ------- ####
 list.of.packages <- c("BiocGenerics","tximport","S4Vectors", "DESeq2", "biomaRt",
                       "ggplot2", "ggsignif", "ggpubr", "sva", "devtools", "org.Hs.eg.db", 
-                      "org.Mm.eg.db", "limma","stringr","KEGGREST","ggrepel", "openxlsx",
+                      "org.Mm.eg.db", "limma","stringr","KEGGREST","ggrepel", "openxlsx", 'splitstackshape',
                       "fgsea","clusterProfiler","pheatmap","ggpubr","cowplot",'dplyr','janitor',
                       "RColorBrewer",'AnnotationDbi', 'tidyverse','pheatmap', 'dendextend')
 
