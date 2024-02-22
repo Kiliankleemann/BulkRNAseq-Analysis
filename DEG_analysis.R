@@ -19,8 +19,14 @@ invisible(lapply(list.of.packages, library, character.only = TRUE))
 
 
 #### -------- CREATING DIRECTORIES ------- ####
-# dir.create('results')
-# dir.create('plots')
+dir.create('results')
+dir.create('plots')
+dir.create('plots/PCA')
+dir.create('plots/heatmaps')
+dir.create('plots/barplots')
+
+#### -------- SET WORKING DIRECTORY ------- ####
+setwd(paste0('directory/to/workingfolder'))
 
 
 #### -------- FILE PREPARATION ------- ####

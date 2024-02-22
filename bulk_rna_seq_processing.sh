@@ -1,7 +1,3 @@
-#Make folder and move all samples into fastq_file folder
-mkdir fastq_files
-mv *.fq.gz fastq_files
-
 #Edit fastq  ending of file and symbol to cut the name 
 #Edit fastq  ending of file and symbol to cut the name 
 find ./fastq_files -name "*.fq.gz" -maxdepth 1 -type f -exec basename "{}" \; |  cut -d '_' -f1 | sort -u > sample_list.txt
@@ -26,11 +22,11 @@ cd ..
 #Running cutadapt for adapter trimming 
 mkdir fastq_files/trimmed_reads
 cat sample_list.txt | while read sample; do
-	cutadapt --cores 8 --minimum-length 15 -a AGATCGGAAGAGCACACGTCTGAACTCCAGTC -A AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGT -o fastq_files/trimmed_reads/${sample}.1.trimmed.fastq.gz -p fastq_files/trimmed_reads/${sample}.2.trimmed.fastq.gz fastq_files/${sample}_L2_1.fq.gz fastq_files/${sample}_L2_2.fq.gz
+	cutadapt --cores 12 --minimum-length 15 -a AGATCGGAAGAGCACACGTCTGAACTCCAGTC -A AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGT -o fastq_files/trimmed_reads/${sample}.1.trimmed.fastq.gz -p fastq_files/trimmed_reads/${sample}.2.trimmed.fastq.gz fastq_files/${sample}_L2_1.fq.gz fastq_files/${sample}_L2_2.fq.gz
 done
 
 #Running fastqc on the filtered reads
-fastqc -t 8 fastq_files/trimmed_reads/*.fq.gz 
+fastqc -t 12 fastq_files/trimmed_reads/*.fq.gz 
 multiqc fastq_files/trimmed_reads/
 #Check that adapter have been trimmed
 cd ..
