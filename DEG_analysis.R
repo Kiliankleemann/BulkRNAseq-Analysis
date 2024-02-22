@@ -118,13 +118,7 @@ dds_result <- results(dds_run, pAdjustMethod = 'BH', independentFiltering = T, c
 
 #dds_result
 summary(dds_result, alpha = 0.05)
-# summary_results <- mcols(dds_result, use.names=TRUE)
-# summary_results
-# 
- dir.create(paste0('results/',file_prefix))
-# pdf(file = paste0('results/', file_prefix,'/Statistics_result', '.pdf'), pointsize = 10)
-#   print(summary_results)
-# dev.off()
+
 
 ## View Total number of normalized counts per sample
 dds_run <- estimateSizeFactors(dds_run)
@@ -169,7 +163,7 @@ pdf(file = paste0('plots/PCA/', file_prefix,'/PCA_top200_labelled', '.pdf'), poi
   ggplot(z$data,aes(x=z$data$PC1, y=z$data$PC2, label = z$data$name)) +
   geom_point(aes(color = condition_1, shape = condition_2)) +
   theme_PCA + labs(title = 'PCA (Top 200 variable genes)',   x=paste(z$labels$x), y=paste(z$labels$y)) +
-    geom_text_repel(aes(label = experiment$sample.ID),max.overlaps = Inf )
+    geom_text_repel(aes(label = experiment$Sample_ID),max.overlaps = Inf )
 dev.off()
 
 
