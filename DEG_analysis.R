@@ -32,7 +32,7 @@ setwd(paste0('directory/to/workingfolder'))
 #### -------- FILE PREPARATION ------- ####
 # useMart is a function used to connect to the selected BioMart database and dataset (ListEnsemblArchives() to list host sites)
 ensembl_mm_mart <- useMart(biomart="ensembl", dataset="mmusculus_gene_ensembl")
-## getBM is a function used to retrieve information from the BioMart database
+# getBM is a function used to retrieve information from the BioMart database
 ensembl_df <- getBM(attributes = c("ensembl_transcript_id_version", "ensembl_gene_id_version", "external_gene_name"), mart = ensembl_mm_mart) %>%
   as_tibble() %>%
   mutate(noVersion = sub('\\..*', '', ensembl_transcript_id_version))
@@ -43,15 +43,13 @@ tx2gene <- ensembl_df %>%
   rename(c('Transcript' = "noVersion" , "Gene" = "external_gene_name" )) %>%
   data.frame()
 
-# ## Create a metadata map using your metadata file.
-# # metadata <- read.xlsx("metadata.xlsx", sheet = 1) %>% remove_missing()
+# Create a metadata map using your metadata file.
 sample_data <- read.xlsx("metadata.xlsx", sheet = 1)
 
 # Outlier filtering  and subsetting(if necessary)
 outliers = c('B3')
 sample_data <- sample_data %>%            # Filter sample_data sheet
   filter(!Sample_ID %in% outliers)
-
 
 xxx <- sample_data %>% filter(condition_2 == 'xxx')
 xxx <- sample_data %>% filter(condition_2 == 'xxx')
@@ -61,9 +59,6 @@ file_prefix <- 'xxx'
 experiment <- xxx
 experiment
 
-#Set up comparison design
-#Set up LRT or Wald
-#Set reference
 
 ## List all directories containing data
 #*** All the gene quantification files are in the folder "quant_files", make sure metafile sample order matches order of quant files.
