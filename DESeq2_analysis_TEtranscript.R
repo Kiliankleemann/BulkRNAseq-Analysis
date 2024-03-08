@@ -207,13 +207,14 @@ check_res <- dds_result %>%
 
 
 # Output files
+dir.create(paste0('results/', file_prefix))
 #Statistics
-write.xlsx(sig_res, file = paste0('results/', file_prefix, 'DEGene_statistics_pval05.xlsx'), overwrite = T)
-write.xlsx(check_res, file = paste0('results/', file_prefix, 'statistics.xlsx'), overwrite = T)
+write.xlsx(sig_res, file = paste0('results/', file_prefix, '/DEGene_statistics_pval05.xlsx'), overwrite = T)
+write.xlsx(check_res, file = paste0('results/', file_prefix, '/statistics.xlsx'), overwrite = T)
 
 #Counts
-write.xlsx(sig_export, file = paste0('results/', file_prefix, 'DEGene_counts_pval05.xlsx'), overwrite = T)
-write.xlsx(check_counts, file = paste0('results/', file_prefix, 'DS_counts_check.xlsx'), overwrite = T)
+write.xlsx(sig_export, file = paste0('results/', file_prefix, '/DEGene_counts_pval05.xlsx'), overwrite = T)
+write.xlsx(check_counts, file = paste0('results/', file_prefix, '/DS_counts_check.xlsx'), overwrite = T)
 # write.xlsx(TPM,file = paste0('results/', file_prefix, 'TPM.xlsx'), overwrite = T)
 
 
