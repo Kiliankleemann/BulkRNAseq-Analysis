@@ -45,6 +45,10 @@ TEtranscript_multi_counts <- colClean1(TEtranscript_multi_counts)
 TEtranscript_multi_counts <- colClean2(TEtranscript_multi_counts)
 TEtranscript_multi_counts <- colClean3(TEtranscript_multi_counts)
 
+#Make numeric
+TEtranscript_multi_counts <- mutate_all(TEtranscript_multi_counts, function(x) as.numeric(as.character(x)))
+
+
 #Arrange count_data columns as ordered in sample_data
 TEtranscript_multi_counts_filtered <- TEtranscript_multi_counts %>% select(-contains(outliers))
 TEtranscript_multi_counts_reordered <- TEtranscript_multi_counts_filtered %>% select(paste(sample_data$Sample_ID))
