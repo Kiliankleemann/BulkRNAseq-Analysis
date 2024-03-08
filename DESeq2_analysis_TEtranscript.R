@@ -128,7 +128,7 @@ theme_PCA <- theme(aspect.ratio = 1,
 
 pdf(file = paste0('plots/PCA/', file_prefix,'', '.pdf'), pointsize = 10)
 ggplot(z$data,aes(x=z$data$PC1, y=z$data$PC2, )) +
-  geom_point(aes(color = Genotype)) +
+  geom_point(aes(color = group)) +
   theme_PCA +
   labs(title = 'PCA (Top 200 variable genes)',   x=paste(z$labels$x), y=paste(z$labels$y))
 dev.off()
@@ -136,7 +136,7 @@ dev.off()
 
 pdf(file = paste0('plots/PCA/', file_prefix,'_labelled', '.pdf'), pointsize = 10)
 ggplot(z$data,aes(x=z$data$PC1, y=z$data$PC2, label = z$data$name)) +
-  geom_point(aes(color = Genotype)) +
+  geom_point(aes(color = group)) +
   theme_PCA + labs(title = 'PCA (Top 200 variable genes)',   x=paste(z$labels$x), y=paste(z$labels$y)) +
   geom_text_repel(aes(label = sample_data$Sample_ID),max.overlaps = Inf )
 dev.off()
