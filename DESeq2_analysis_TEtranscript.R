@@ -45,6 +45,10 @@ TEtranscript_multi_counts <- colClean1(TEtranscript_multi_counts)
 TEtranscript_multi_counts <- colClean2(TEtranscript_multi_counts)
 TEtranscript_multi_counts <- colClean3(TEtranscript_multi_counts)
 
+#Make numeric
+TEtranscript_multi_counts <- mutate_all(TEtranscript_multi_counts, function(x) as.numeric(as.character(x)))
+
+
 #Arrange count_data columns as ordered in sample_data
 TEtranscript_multi_counts_filtered <- TEtranscript_multi_counts %>% select(-contains(outliers))
 TEtranscript_multi_counts_reordered <- TEtranscript_multi_counts_filtered %>% select(paste(sample_data$Sample_ID))
@@ -124,7 +128,7 @@ theme_PCA <- theme(aspect.ratio = 1,
 
 pdf(file = paste0('plots/PCA/', file_prefix,'', '.pdf'), pointsize = 10)
 ggplot(z$data,aes(x=z$data$PC1, y=z$data$PC2, )) +
-  geom_point(aes(color = Genotype)) +
+  geom_point(aes(color = group)) +
   theme_PCA +
   labs(title = 'PCA (Top 200 variable genes)',   x=paste(z$labels$x), y=paste(z$labels$y))
 dev.off()
@@ -132,7 +136,7 @@ dev.off()
 
 pdf(file = paste0('plots/PCA/', file_prefix,'_labelled', '.pdf'), pointsize = 10)
 ggplot(z$data,aes(x=z$data$PC1, y=z$data$PC2, label = z$data$name)) +
-  geom_point(aes(color = Genotype)) +
+  geom_point(aes(color = group)) +
   theme_PCA + labs(title = 'PCA (Top 200 variable genes)',   x=paste(z$labels$x), y=paste(z$labels$y)) +
   geom_text_repel(aes(label = sample_data$Sample_ID),max.overlaps = Inf )
 dev.off()
@@ -203,13 +207,14 @@ check_res <- dds_result %>%
 
 
 # Output files
+dir.create(paste0('results/', file_prefix))
 #Statistics
-write.xlsx(sig_res, file = paste0('results/', file_prefix, 'DEGene_statistics_pval05.xlsx'), overwrite = T)
-write.xlsx(check_res, file = paste0('results/', file_prefix, 'statistics.xlsx'), overwrite = T)
+write.xlsx(sig_res, file = paste0('results/', file_prefix, '/DEGene_statistics_pval05.xlsx'), overwrite = T)
+write.xlsx(check_res, file = paste0('results/', file_prefix, '/statistics.xlsx'), overwrite = T)
 
 #Counts
-write.xlsx(sig_export, file = paste0('results/', file_prefix, 'DEGene_counts_pval05.xlsx'), overwrite = T)
-write.xlsx(check_counts, file = paste0('results/', file_prefix, 'DS_counts_check.xlsx'), overwrite = T)
+write.xlsx(sig_export, file = paste0('results/', file_prefix, '/DEGene_counts_pval05.xlsx'), overwrite = T)
+write.xlsx(check_counts, file = paste0('results/', file_prefix, '/DS_counts_check.xlsx'), overwrite = T)
 # write.xlsx(TPM,file = paste0('results/', file_prefix, 'TPM.xlsx'), overwrite = T)
 
 
