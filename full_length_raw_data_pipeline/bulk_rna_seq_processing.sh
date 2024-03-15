@@ -1,23 +1,17 @@
 #Edit fastq  ending of file and symbol to cut the name 
-#Edit fastq  ending of file and symbol to cut the name 
 find ./fastq_files -name "*.fq.gz" -maxdepth 1 -type f -exec basename "{}" \; |  cut -d '_' -f1 | sort -u > sample_list.txt
 cat sample_list.txt
 
 #Running fastq for all files
 mkdir fastq_files/QC
-cd fastq_files
-fastqc *.fq.gz
+fastqc fastq_files/*.fq.gz -t 12
 
 #Move all fastqc reports into the QC folder 
-mv *fastqc* QC/
+mv fastq_files/*fastqc* QC/
 
-#Check quality of samples
-cd QC
-multiqc .
+#Make quality overview
+multiqc QC/
 
-#Move back out to working folder
-cd ..
-cd ..
 
 #Running cutadapt for adapter trimming 
 mkdir fastq_files/trimmed_reads
@@ -29,8 +23,6 @@ done
 fastqc -t 12 fastq_files/trimmed_reads/*.fq.gz 
 multiqc fastq_files/trimmed_reads/
 #Check that adapter have been trimmed
-cd ..
-
 
 #Running salmon against transcriptome
 mkdir transcript_quant
@@ -38,7 +30,7 @@ cat sample_list.txt | while read sample;
 	do salmon quant -i /media/kilian/OS/mm10_salmon/ -l A -1 fastq_files/trimmed_reads/${sample}.1.trimmed.fastq.gz -2 fastq_files/trimmed_reads/${sample}.2.trimmed.fastq.gz --validateMappings -o transcript_quant/${sample}_quant --thread 8
 done
 
-### STAR ALIGNMENT
+### STAR ALIGNMENT for TE analysis
 #STAR  --runMode genomeGenerate --runThreadN 16 --genomeDir STAR_index_mm10 --genomeFastaFiles mm10_STAR/mm10.fa  #--sjdbGTFfile mm10_STAR/mm10.refGene.gtf
 mkdir BAM_files_multi_trimmed
 cat sample_list.txt | while read sample; do
@@ -58,14 +50,13 @@ cat sample_list.txt | while read sample; do
 	--readFilesCommand zcat 
 done
 
-
 #Index files
 cat sample_list.txt | while read sample; do
 	samtools index BAM_files_multi_trimmed/${sample}Aligned.sortedByCoord.out.bam
 done
 
 #Running TEtranscript
-#Download required files
+#Download required files (for mouse)
 mkdir GTF_files_TEtranscript
 cd GTF_files_TEtranscript
 wget https://labshare.cshl.edu/shares/mhammelllab/www-data/TEtranscripts/TE_GTF/GRCm38_GENCODE_rmsk_TE.gtf.gz.download
@@ -73,6 +64,7 @@ wget https://hgdownload.soe.ucsc.edu/goldenPath/mm10/bigZips/genes/mm10.refGene.
 gzip -d *.gz
 
 #Multimapping
+#TEtranscript
 mkdir TETranscripts_multi
 TEtranscripts -t  \
                      -c 
@@ -81,6 +73,17 @@ TEtranscripts -t  \
                      --mode multi \
                      --outdir TETranscripts_multi \
                      --sortByPos
+
+#TElocal                   
+cat sample_list.txt | while read sample; do
+TElocal -b BAM_files_multi_trimmed/${sample}Aligned.sortedByCoord.out.bam \
+        --GTF /media/kilian/OS/GTF_files_TEtranscript/mm10.refGene.gtf \
+        --TE /media/kilian/OS/GTF_files_TEtranscript/GRCm38_GENCODE_rmsk_TE.gtf.locInd \
+        --project ${sample} \
+	--mode multi \
+	--sortByPos
+done
+
 
 #Unique mapping 
 mkdir TETranscripts_uniq
@@ -101,14 +104,6 @@ TElocal -b BAM_files_multi/${sample}Aligned.sortedByCoord.out.bam \
 	--sortByPos
 done
 
-cat sample_list.txt | while read sample; do
-TElocal -b BAM_files_multi_trimmed/${sample}Aligned.sortedByCoord.out.bam \
-        --GTF /media/kilian/OS/GTF_files_TEtranscript/mm10.refGene.gtf \
-        --TE /media/kilian/OS/GTF_files_TEtranscript/GRCm38_GENCODE_rmsk_TE.gtf.locInd \
-        --project ${sample} \
-	--mode uniq \
-	--sortByPos
-done
 
 
 #Quantification of TEs with Stringtie
