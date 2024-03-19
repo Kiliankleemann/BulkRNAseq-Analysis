@@ -14,7 +14,7 @@ invisible(lapply(list.of.packages, library, character.only = TRUE))
 
 
 ###### ----- SETTING WORK DIRECTORY -----#####
-setwd("/media/kilian/OS/Anne_L292_CASRX_Guides_Nov_2023/")
+setwd("/home/kilian/sciebo - Kleemann, Kilian (kleemann@uni-bonn.de)@uni-bonn.sciebo.de/Immune_priming_TE/3prime_vs_fulllength/3prime_Samhd1/")
 
 dir.create('results')
 dir.create('plots')
@@ -32,10 +32,7 @@ outliers = c('')
 sample_data <- sample_data %>%            
   filter(!Sample_ID %in% outliers)
 
-#Analyzis parameters
-file_prefix = 'TELocal_unique_SIRT1KI_vs_WT'
-experiment = sample_data
-experiment
+sample_data <- sample_data %>% filter(Genotype_2 == 'WT')
 
 #Import TElocal locus sepcific information 
 locus_df <- read.table(paste0('/media/kilian/OS/GTF_files_TEtranscript/mm10_rmsk_TE.gtf.locInd.locations')) %>% row_to_names(row_number = 1)
@@ -46,13 +43,13 @@ locus_df <- locus_df %>% `colnames<-`(c('TE','Chromosome','Strand','Start','Stop
 locus_df$Length = locus_df$Stop - locus_df$Start
 
 #Import TElocal counts
-sample_files <- list.files(".//TElocal_multi_3ctrl", full.names = T, pattern=NULL, all.files=FALSE)
+sample_files <- list.files(".//TElocal_multi", full.names = T, pattern=NULL, all.files=FALSE)
 sample_files
-experiment_ctrl <- experiment %>% filter(Condition_1 == 'ctrl' & Condition_3 == 'no_guide_ctrl')
+experiment_ctrl <- experiment #%>% filter(Condition_1 == 'ctrl' & Condition_3 == 'no_guide_ctrl')
 
 TElocal_uniq_counts_all<- data.frame(row.names=1:3751066)
 for (sample in experiment_ctrl$Sample_ID) {
-  TElocal_uniq_counts <- read.table(paste0('TElocal_multi_3ctrl/',sample,'_1.cntTable')) %>% row_to_names(row_number = 1)
+  TElocal_uniq_counts <- read.table(paste0('TElocal_multi/',sample,'.cntTable')) %>% row_to_names(row_number = 1)
   TElocal_uniq_counts_all <-  cbind(TElocal_uniq_counts_all,TElocal_uniq_counts)
 }
 
@@ -75,17 +72,18 @@ TElocal_uniq_counts_all3 <- colClean3(TElocal_uniq_counts_all3)
 
 
 #Analyzis parameters
-file_prefix = 'TElocal_multi_counts_3ctrl'
+file_prefix = 'TELocal_multi_WT_vs_Samhd1KO'
 experiment = TElocal_uniq_counts_all3
 experiment
 sample_data <- sample_data
 sample_data
 
 
+
 ###### ----- DESEQ2 ANALYSIS -----#####
 #Designs 
 #dds <- DESeqDataSetFromTximport(txi, colData = experiment, design = ~  Genotype) 
-dds <- DESeqDataSetFromMatrix(countData = experiment, colData = sample_data, design = ~ Condition_1) 
+dds <- DESeqDataSetFromMatrix(countData = experiment, colData = sample_data, design = ~ Genotype) 
 
 #prefiltering on minimum of 5 reads (NOT REQUIRED AS DESEQ2 OPTIMIZES AND FILTERS AUTOMATICALLY)
 dds <- estimateSizeFactors(dds)
@@ -131,7 +129,7 @@ vst <- vst(dds_run, blind=TRUE)
 
 ###### ----- PCA -----#####
 # Add nametags
-z <- plotPCA(vst, intgroup=c('Condition_1'),ntop = 200)
+z <- plotPCA(vst, intgroup=c('Genotype'),ntop = 200)
 
 theme_PCA <- theme(aspect.ratio = 1, 
                    panel.background = element_blank(),
@@ -147,7 +145,7 @@ theme_PCA <- theme(aspect.ratio = 1,
 
 pdf(file = paste0('plots/PCA/', file_prefix,'', '.pdf'), pointsize = 10)
 ggplot(z$data,aes(x=z$data$PC1, y=z$data$PC2, )) +
-  geom_point(aes(color = Condition_1)) +
+  geom_point(aes(color = group)) +
   theme_PCA +
   labs(title = 'PCA (Top 200 variable genes)',   x=paste(z$labels$x), y=paste(z$labels$y))
 dev.off()
