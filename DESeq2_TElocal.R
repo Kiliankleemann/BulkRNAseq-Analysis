@@ -32,7 +32,7 @@ outliers = c('')
 sample_data <- sample_data %>%            
   filter(!Sample_ID %in% outliers)
 
-sample_data <- sample_data %>% filter(Genotype_2 == 'WT')
+#sample_data <- sample_data %>% filter(Genotype_2 == 'WT')
 
 #Import TElocal locus sepcific information 
 locus_df <- read.table(paste0('/media/kilian/OS/GTF_files_TEtranscript/mm10_rmsk_TE.gtf.locInd.locations')) %>% row_to_names(row_number = 1)
@@ -75,15 +75,13 @@ TElocal_uniq_counts_all3 <- colClean3(TElocal_uniq_counts_all3)
 file_prefix = 'TELocal_multi_WT_vs_Samhd1KO'
 experiment = TElocal_uniq_counts_all3
 experiment
-sample_data <- sample_data
-sample_data
 
 
 
 ###### ----- DESEQ2 ANALYSIS -----#####
 #Designs 
 #dds <- DESeqDataSetFromTximport(txi, colData = experiment, design = ~  Genotype) 
-dds <- DESeqDataSetFromMatrix(countData = experiment, colData = sample_data, design = ~ Genotype) 
+dds <- DESeqDataSetFromMatrix(countData = experiment, colData = sample_data, design = ~ Genotype_2) 
 
 #prefiltering on minimum of 5 reads (NOT REQUIRED AS DESEQ2 OPTIMIZES AND FILTERS AUTOMATICALLY)
 dds <- estimateSizeFactors(dds)
@@ -91,7 +89,7 @@ dds <- estimateSizeFactors(dds)
 # dds <- dds[idx,]
 
 #Setting the reference level (control group to compare against)
-dds@colData@listData$Condition_1 <- relevel(dds@colData@listData$Condition_1, ref = "ctrl")
+#dds@colData@listData$Condition_1 <- relevel(dds@colData@listData$Condition_1, ref = "ctrl")
 
 
 ## Run DESeq analysis to gather differential expression results
@@ -129,7 +127,7 @@ vst <- vst(dds_run, blind=TRUE)
 
 ###### ----- PCA -----#####
 # Add nametags
-z <- plotPCA(vst, intgroup=c('Genotype'),ntop = 200)
+z <- plotPCA(vst, intgroup=c('Genotype_2'),ntop = 200)
 
 theme_PCA <- theme(aspect.ratio = 1, 
                    panel.background = element_blank(),
@@ -173,7 +171,7 @@ sig_res <- dds_result %>%
 sorted_DEGenes <- sig_res$gene
 
 # Export significant gene count data
-name_list <- c('gene', (paste0(dds_run$Condition_1, "_", dds_run$Sample_ID)))
+name_list <- c('gene', (paste0(dds_run$Genotype_2, "_", dds_run$Sample_ID)))
 name_list
 
 sig_export <- DS_norm_counts %>%
@@ -239,7 +237,7 @@ check_res_TE <- check_res %>% filter(grepl(':',gene))
 sig_counts_TE <- sig_export %>% filter(grepl(':',gene))
 
 check_res_TE <- cSplit(check_res_TE,'gene',':')
-#sig_res_TE <- sig_res_TE[,c(1:7)]
+sig_res_TE <- sig_res_TE[,c(1:7)]
 
 sig_counts_TE <- cSplit(sig_counts_TE,'gene',':')
 #sig_counts_TE <- sig_counts_TE %>% select(-c('gene_2','gene_3', 'gene_4'))

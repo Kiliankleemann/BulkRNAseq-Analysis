@@ -1,72 +1,46 @@
-#Alignment with Minimap2
-#Issue with x64 M1 chip !! do not copy the notes into commad line
-CONDA_SUBDIR=osx-64 conda create -n Bulk_RNA_TE_pipeline 
-conda activate Bulk_RNA_TE_pipeline
-conda env config vars set CONDA_SUBDIR=osx-64
-conda deactivate
-conda activate Bulk_RNA_TE_pipeline
-conda install multiqc
-conda install fastqc
-conda install bowtie2
-conda install samtools
-conda install salmon
-conda install fastp
-
-#Downgrading python for the environment
-conda deactivate 
-conda activate Bulk_RNA_TE_pipeline
-conda install python=3.7
-conda install tetranscripts
+#Make fastq_folder
+mkdir fastq_files
+mv *.fq.gz fastq_folder
 
 #Detect all samples in fastq_files folder
 echo 'Detected fastq samples'
-find ./fastq_files -name "*.fq.gz" -maxdepth 1 -type f -exec basename "{}" \; |  cut -d '.' -f1 | sort -u > sample_list.txt
+find ./fastq_files -name "*.fq.gz" -maxdepth 1 -type f -exec basename "{}" \; |  cut -d '_' -f1 | sort -u > sample_list.txt
 cat sample_list.txt
 
 #Running fastq for all files
-mkdir fastq_files/QC
-cd fastq_files
-fastqc *.fq.gz -t 8
+mkdir QC
+mv QZ.zip QC
+unzip QC.zip
 
-#Move all fastqc reports into the QC folder 
-mv *fastqc* QC/
-
-#Check quality of samples
-cd QC
-multiqc .
-cd ..
-
-#run fastp on all samples 
-mkdir fastq_files/fastp_sorted
-cat sample_list.txt | while read sample; 
-	do fastp -i fastq_files/${sample}.fq.gz -o fastq_files/fastp_sorted/${sample}.fq.gz --thread 8
-done
+#Create multiqc report
+multiqc QC/
 
 
+
+#run cutadapt on all samples 
 mkdir fastq_files/trimmed_reads
 cat sample_list.txt | while read sample; do
 echo $sample
-cutadapt --cores 8 --minimum-length 15 -a AGATCGGAAGAGCACACGTCTGAACTCCAGTCA -o fastq_files/trimmed_reads/${sample}.trimmed.fq.gz fastq_files/${sample}.fq.gz --poly-a
+	cutadapt --cores 12 --minimum-length 15 -a AAGATCGGAAGAGCACACGTCTGAACTCCAGTCA -o fastq_files/trimmed_reads/${sample}.trimmed.fq.gz fastq_files/${sample}.fq.gz --poly-a
 done
 
-
 #Running fastqc on the filtered reads
-#mkdir fastq_files/fastp_sorted/fastqc_reports
-#cat sample_list.txt | while read sample; 
-#	do fastqc -t 8 fastq_files/fastp_sorted/${sample}.fq.gz -o fastq_files/fastp_sorted/fastqc_reports/
-#done
+mkdir QC/trimmed_reads
+cat sample_list.txt | while read sample; 
+	do fastqc -t 8 fastq_files/trimmed_reads/${sample}.trimmed.fq.gz -o QC/trimmed_reads
+done
 
 #Check quality of samples
-#cd fastq_files/fastp_sorted/fastqc_reports/
-#multiqc .
-#cd ..
+multiqc QC/trimmed
 
 
 #Running salmon against transcriptome
 mkdir transcript_quant
 cat sample_list.txt | while read sample; 
-	do salmon quant -i /media/kilian/OS/mm10_salmon/ -l A -r fastq_files/fastp_sorted/${sample}.fq.gz --validateMappings -o transcript_quant/${sample}_quant --threads 8
+	do salmon quant -i /media/kilian/OS/hg38_salmon/ -l A -r fastq_files/trimmed_reads/${sample}.trimmed.fq.gz --validateMappings -o transcript_quant/${sample}_quant --threads 12
 done
+
+
 
 ### STAR ALIGNMENT
 STAR  --runMode genomeGenerate --runThreadN 16 --genomeDir STAR_index_mm10 --genomeFastaFiles mm10_STAR/mm10.fa  --sjdbGTFfile mm10_STAR/mm10.refGene.gtf
