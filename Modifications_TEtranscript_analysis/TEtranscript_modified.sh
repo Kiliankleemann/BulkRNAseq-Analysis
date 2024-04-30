@@ -6,14 +6,23 @@ wget https://labshare.cshl.edu/shares/mhammelllab/www-data/TEtranscripts/TE_GTF/
 wget https://hgdownload.soe.ucsc.edu/goldenPath/mm10/bigZips/genes/mm10.refGene.gtf.gz
 gzip -d *.gz
 
-#filtering out only instances of full transcripts
+#filtering out only instances of full transcripts MOUSE
 /media/kilian/OS/BulkRNAseq-Analysis/Modifications_TEtranscript_analysis/filter_gtf.sh mm10.refGene.gtf > mm10.transcripts_filtered.gtf
+#filtering out only instances of full transcripts HUMAN
+/media/kilian/OS/BulkRNAseq-Analysis/Modifications_TEtranscript_analysis/filter_gtf.sh GRCh38.refGene.gtf > GRCh38.transcripts_filtered.gtf
 
 #Removing all TE counts from repeatmasker which overlap with refGene.gtf
 bedtools subtract -s -A -a GRCm38_GENCODE_rmsk_TE.gtf -b mm10.transcripts_filtered.gtf > GRCm38_GENCODE_rmsk_TE_filtered.gtf
 
-#Finding overlaping 
+#Finding overlaping regions between repeatmakser and gene annotations MOUSE 
 bedtools intersect -s -a GRCm38_GENCODE_rmsk_TE.gtf -b mm10.transcripts_filtered.gtf > GRCm38_rmsk_TE_transcript_overlap.gtf
+bedtools intersect -s -wa -a GRCm38_GENCODE_rmsk_TE.gtf -b mm10.transcripts_filtered.gtf > GRCm38_rmsk_TE_transcript_overlap_wa.gtf
+bedtools intersect -wa -a GRCm38_GENCODE_rmsk_TE.gtf -b mm10.transcripts_filtered.gtf > GRCm38_rmsk_TE_transcript_overlap_wa_nostrandedness.gtf
+
+#Finding overlaping regions between repeatmakser and gene annotations HUMAN 
+bedtools intersect -s -a GRCh38_GENCODE_rmsk_TE.gtf -b GRCh38.transcripts_filtered.gtf > GRCh38_rmsk_TE_transcript_overlap.gtf
+bedtools intersect -s -wa -a GRCh38_GENCODE_rmsk_TE.gtf -b GRCh38.transcripts_filtered.gtf > GRCh38_rmsk_TE_transcript_overlap_wa.gtf
+bedtools intersect -wa -a GRCh38_GENCODE_rmsk_TE.gtf -b GRCh38.transcripts_filtered.gtf > GRCh38_rmsk_TE_transcript_overlap_wa_nostrandedness.gtf
 
 
 #Multimapping
