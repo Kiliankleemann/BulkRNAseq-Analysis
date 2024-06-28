@@ -27,7 +27,7 @@ multiqc fastq_files/trimmed_reads/
 #Running salmon against transcriptome
 mkdir transcript_quant
 cat sample_list.txt | while read sample; 
-	do salmon quant -i /media/kilian/OS/mm10_salmon/ -l A -1 fastq_files/trimmed_reads/${sample}.1.trimmed.fastq.gz -2 fastq_files/trimmed_reads/${sample}.2.trimmed.fastq.gz --validateMappings -o transcript_quant/${sample}_quant --thread 8
+	do salmon quant -i /media/kilian/OS/References/mm10_salmon/ -l A -1 fastq_files/${sample}_L1_1.fq.gz -2 fastq_files/${sample}_L1_2.fq.gz --validateMappings -o transcript_quant/${sample}_quant --thread 8
 done
 
 ### STAR ALIGNMENT for TE analysis
