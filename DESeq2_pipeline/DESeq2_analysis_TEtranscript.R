@@ -14,7 +14,9 @@ invisible(lapply(list.of.packages, library, character.only = TRUE))
 
 
 ###### ----- SETTING WORK DIRECTORY -----#####
-setwd("/Users/kiliankleemann/sciebo - Kleemann, Kilian (kleemann@uni-bonn.de)@uni-bonn.sciebo.de/Immune_priming_TE/Chronic_vs_Acute/Chronic/Samhd1_Ifnar1_KO")
+#setwd("∼/sciebo - Kleemann, Kilian (kleemann@uni-bonn.de)@uni-bonn.sciebo.de/Immune_priming_TE/Chronic_vs_Acute/Chronic/Samhd1_KO_2013")
+setwd("~/sciebo - Kleemann, Kilian (kleemann@uni-bonn.de)@uni-bonn.sciebo.de/Immune_priming_TE/Chronic_vs_Acute/Chronic/Brain_RNA_Microglia_IFNAR_KO")
+#Create Directories
 dir.create('results')
 dir.create('plots')
 dir.create('plots/PCA')
@@ -25,10 +27,10 @@ dir.create('plots/volcano/')
 
 ###### ----- FILE PREPARATION -----#####
 # Create a metadata map using your metadata file.
-sample_data <- read.xlsx("meta_edit.xlsx", sheet = 1)
-sample_data <- sample_data %>% distinct(Experiment, .keep_all = TRUE)
+sample_data <- read.xlsx("metadata.xlsx", sheet = 1)
 
-outliers = c('')
+#outliers = c('DE09NGSUKBR126305','DE15NGSUKBR126294','DE91NGSUKBR126284', 'DE25NGSUKBR126308') 
+
 sample_data <- sample_data %>%            
   filter(!Sample_ID %in% outliers)
 
@@ -43,7 +45,7 @@ TEtranscript_multi_counts <- TEtranscript_multi_counts2
 
 colClean1 <- function(TEtranscript_multi_counts){colnames(TEtranscript_multi_counts) <- gsub("Aligned.sortedByCoord.out.bam.T", "", colnames(TEtranscript_multi_counts)); TEtranscript_multi_counts } 
 colClean2 <- function(TEtranscript_multi_counts){colnames(TEtranscript_multi_counts) <- gsub("Aligned.sortedByCoord.out.bam.C", "", colnames(TEtranscript_multi_counts)); TEtranscript_multi_counts } 
-colClean3 <- function(TEtranscript_multi_counts){colnames(TEtranscript_multi_counts) <- gsub(".*multi/", "", colnames(TEtranscript_multi_counts)); TEtranscript_multi_counts } 
+colClean3 <- function(TEtranscript_multi_counts){colnames(TEtranscript_multi_counts) <- gsub(".*?/", "", colnames(TEtranscript_multi_counts)); TEtranscript_multi_counts } 
 
 TEtranscript_multi_counts <- colClean1(TEtranscript_multi_counts)
 TEtranscript_multi_counts <- colClean2(TEtranscript_multi_counts)
@@ -52,17 +54,17 @@ TEtranscript_multi_counts <- colClean3(TEtranscript_multi_counts)
 TEtranscript_multi_counts <- mutate_all(TEtranscript_multi_counts, function(x) as.numeric(as.character(x)))
 
 #Susetting analysis
-sample_data <- sample_data %>% filter(sex == "female")
-sample_data <- sample_data %>% filter(sex == "male")
+sample_data <- read.xlsx("metadata.xlsx", sheet = 1)
+sample_data <- sample_data %>% filter(sex %in%c("male"))
 
 #Arrange count_data columns as ordered in sample_data
-TEtranscript_multi_counts <- TEtranscript_multi_counts %>% select(-contains(outliers))
+#TEtranscript_multi_counts <- TEtranscript_multi_counts %>% select(-contains(outliers))
 TEtranscript_multi_counts_reordered <- TEtranscript_multi_counts %>% select(paste(sample_data$Sample_ID))
 
 #Analyzis parameters
-file_prefix = 'TEtranscript_multi_female_meta_edit'
+file_prefix = 'TEtranscript_multi_female_samples'
 reference_compare_to <- "WT"
-factor_of_interest <- ""
+factor_of_interest <- "SAMHD1_Sting_dKO"
 comparison_variable <- "Genotype"
 experiment = TEtranscript_multi_counts_reordered
 experiment
@@ -79,7 +81,7 @@ dds <- estimateSizeFactors(dds)
 # dds <- dds[idx,]
 
 #Setting the reference level (control group to compare against)
-dds@colData@listData$Genotype <- relevel(dds@colData@listData$Genotype, ref = reference_compare_to)
+#dds@colData@listData$Genotype <- relevel(dds@colData@listData$Genotype, ref = reference_compare_to)
 
 
 ## Run DESeq analysis to gather differential expression results
@@ -118,24 +120,30 @@ vst <- vst(dds_run, blind=TRUE)
 
 ###### ----- PCA -----#####
 # Add nametags
-z <- plotPCA(vst, intgroup=c(comparison_variable, "sex","Age"),ntop = 200)
+z <- plotPCA(vst, intgroup=c(comparison_variable),ntop = 200)
 
+lineWidth = 1
+pointSize = 20
 theme_PCA <- theme(aspect.ratio = 1, 
                    panel.background = element_blank(),
-                   panel.border=element_rect(fill=NA),
+                   panel.border=element_rect(fill=NA, size = lineWidth),
                    panel.grid.major=element_blank(),
                    panel.grid.minor=element_blank(),
                    strip.background=element_blank(),
-                   axis.text.x=element_text(colour="black"),
-                   axis.text.y=element_text(colour="black"),
+                   line = element_line(size = lineWidth, colour = "black"),
+                   plot.title  = element_text(color="black", size=pointSize),
+                   axis.title  = element_text(size = pointSize, colour = "black"),
+                   axis.text.x  = element_text(size = pointSize , colour = "black"),
+                   axis.text.y  = element_text(size = pointSize , colour = "black"),
                    axis.ticks=element_line(colour="black"),
                    legend.key=element_blank(),
                    plot.margin=unit(c(1,1,1,1),"line"))
 
-pdf(file = paste0('plots/PCA/', file_prefix, '.pdf'), pointsize = 10)
+pdf(file = paste0('plots/PCA/', file_prefix, '.pdf'), pointsize = 5, width = 5, height = 10)
 ggplot(z$data,aes(x=z$data$PC1, y=z$data$PC2, )) +
-  geom_point(aes(color = group)) +
-  theme_PCA + labs(title = 'PCA (Top 200 variable genes)',   x=paste(z$labels$x), y=paste(z$labels$y))
+  geom_point(aes(color = group), size = 4) +
+  theme_PCA + labs(title = 'PCA (Top 200 variable genes)',   x=paste(z$labels$x), y=paste(z$labels$y)) +
+  scale_color_brewer(palette = 'Set1')
 dev.off()
 
 
@@ -176,9 +184,14 @@ sig_export_padj <- sig_export %>% filter(gene %in% sig_res_padj$gene)
 
 #Manual Reordering of Columns (if necessary)
 reordered_index <- c(
-  grep("WT", names(sig_export), ignore.case = T),
-  grep("Samhd1KO", names(sig_export), ignore.case = T),
-  grep("DKO", names(sig_export), ignore.case = T))
+  grep("WT_PBS_male", names(sig_export), ignore.case = T),
+  grep("WT_PBS_female", names(sig_export), ignore.case = T),
+  grep("WT_IFNa_male", names(sig_export), ignore.case = T),
+  grep("WT_IFNa_female", names(sig_export), ignore.case = T),
+  grep("IFNAR_FL_FL_Veh_IFNa_male", names(sig_export), ignore.case = T),
+  grep("IFNAR_FL_FL_Veh_IFNa_female", names(sig_export), ignore.case = T),
+  grep("IFNAR_FL_FL_Tam_IFNa_male", names(sig_export), ignore.case = T),
+  grep("IFNAR_FL_FL_Tam_IFNa_female", names(sig_export), ignore.case = T))
 
 #Ordering
 sig_export <- sig_export %>%
@@ -216,9 +229,7 @@ write.xlsx(sig_export, file = paste0('results/', file_prefix, '/DEGene_counts_pv
 write.xlsx(sig_export_padj, file = paste0('results/', file_prefix, '/DEGene_counts_padj05.xlsx'), overwrite = T)
 write.xlsx(check_counts, file = paste0('results/', file_prefix, '/DS_counts_check.xlsx'), overwrite = T)
 
-
-###### ----- BARPLOTS -----#####
-#goi <- sig_export %>% head(40) %>% pull('gene')
+###### ----- BARPLOTS GOI -----#####
 goi <- c("Ifih1",
          "Samhd1",
          "Cgas",
@@ -232,22 +243,26 @@ goi <- c("Ifih1",
          "Nlrp3",
          "Trex1",
          "Il33",
-         "Ccl4")
+         "Ccl4",
+         'Daxx')
 
-goi_data <-  check_counts %>% filter(gene %in% goi)
+goi_data <-  sig_export %>% filter(gene %in% goi)
 goi_data2 <- rename(goi_data, 
-                    'WT-' = contains('WT'),
-                    'Samhd1KO-' = contains('Samhd1KO'),
-                    'DKO-' = contains('DKO')
-) 
+                    'WT_PBS_male-' = contains('WT_PBS_male'),
+                    'WT_PBS_female-' = contains('WT_PBS_female'),
+                    'WT_IFNa_male-' = contains('WT_IFNa_male'),
+                    'WT_IFNa_female-' = contains('WT_IFNa_female'),
+                    'IFNAR_FL_FL_Veh_IFNa_male-' = contains('IFNAR_FL_FL_Veh_IFNa_male'),
+                    'IFNAR_FL_FL_Veh_IFNa_female-' = contains('IFNAR_FL_FL_Veh_IFNa_female'),
+                    'IFNAR_FL_FL_Tam_IFNa_male-' = contains('IFNAR_FL_FL_Tam_IFNa_male'),
+                    'IFNAR_FL_FL_Tam_IFNa_female-' = contains('IFNAR_FL_FL_Tam_IFNa_female')) 
 
-
-dir.create(paste0('plots/barplots/',file_prefix,"_",Pval_cutoff))
-barplot_dir <- paste0('plots/barplots/',file_prefix ,"_",Pval_cutoff,"/")
-
+goi <- goi_data2 %>% pull(gene)
+dir.create(paste0('plots/barplots/',file_prefix))
+barplot_dir <- paste0('plots/barplots/',file_prefix ,"/")
 
 lineWidth = 1
-pointSize = 40
+pointSize = 20
 for (i in goi) { 
   goi_data3 <- goi_data2 %>% filter(gene == i) %>% pivot_longer(
     cols = -(1:1),
@@ -288,7 +303,7 @@ for (i in goi) {
           axis.line = element_line(size = lineWidth, colour = "black"),
           plot.margin = unit(c(0.5, 0.5, 0.5, 0.5), "cm")) + 
     stat_compare_means(comparisons = comparison_list_sign, method = 't.test', label = "p.signif" ) +
-    scale_fill_brewer(palette = "Paired") + scale_y_continuous(expand = c(0, 0, .05, 0))
+    scale_fill_brewer(palette = "Set1") + scale_y_continuous(expand = c(0, 0, .05, 0))
   
   pdf(file = paste0(barplot_dir, i,'.pdf'), pointsize = 10, width = 5, height= 10)
   print(barplot)
@@ -296,31 +311,27 @@ for (i in goi) {
 }
 
 
-
+###### ----- BARPLOTS TE -----#####
 #TE results
-Pval_cutoff <- 'pval05'
-
-sig_res_TE <- sig_res %>% filter(pvalue<0.05 & baseMean > 5) %>% filter(grepl(':',gene))
+Pval_cutoff <- 'padj05'
+sig_res_TE <- sig_res %>% filter(padj<0.05 & baseMean > 5) %>% filter(grepl(':',gene))
 sig_counts_TE <- sig_export %>% filter(gene %in% sig_res_TE$gene) %>% filter(grepl(':',gene))
 
-
-###### ----- BARPLOTS -----#####
 goi <- sig_res_TE %>% head(40) %>% pull('gene')
 goi_data <-  check_counts %>% filter(gene %in% goi)
 goi_data2 <- rename(goi_data, 
-                    'WT-' = contains('WT'),
-                    'Samhd1KO-' = contains('Samhd1KO'),
-                    'DKO-' = contains('DKO')
-) 
-
-
+                    'WT_PBS_male-' = contains('WT_PBS_male'),
+                    'WT_PBS_female-' = contains('WT_PBS_female'),
+                    'WT_IFNa_male-' = contains('WT_IFNa_male'),
+                    'WT_IFNa_female-' = contains('WT_IFNa_female'),
+                    'IFNAR_FL_FL_Veh_IFNa_male-' = contains('IFNAR_FL_FL_Veh_IFNa_male'),
+                    'IFNAR_FL_FL_Veh_IFNa_female-' = contains('IFNAR_FL_FL_Veh_IFNa_female'),
+                    'IFNAR_FL_FL_Tam_IFNa_male-' = contains('IFNAR_FL_FL_Tam_IFNa_male'),
+                    'IFNAR_FL_FL_Tam_IFNa_female-' = contains('IFNAR_FL_FL_Tam_IFNa_female')) 
 
 dir.create(paste0('plots/barplots/',file_prefix,"_",Pval_cutoff))
 barplot_dir <- paste0('plots/barplots/',file_prefix ,"_",Pval_cutoff,"/")
 
-
-lineWidth = 1
-pointSize = 20
 for (i in goi) { 
   goi_data3 <- goi_data2 %>% filter(gene == i) %>% pivot_longer(
     cols = -(1:1),
@@ -377,8 +388,8 @@ data_subset_200 <- data_final %>% head(n = 200)
 data_subset_400 <- data_final %>% head(n = 400)
 
 #Heatmap setup
-gaps = c(4)
-clusters = 2
+gaps = c(3,6,10)
+clusters = 6
 dir.create(paste0('plots/heatmaps/',file_prefix ,"_",Pval_cutoff))
 heatmap_dir <- paste0('plots/heatmaps/',file_prefix ,"_",Pval_cutoff,"/")
 
@@ -424,7 +435,8 @@ phm_full <- pheatmap(data_final,
                      treeheight_row = 10,
                      #cellwidth = 25,
                      scale = 'row',
-                     cellheight = 8
+                     cellheight = 8,
+                     cellwidth = 8
 )
 ggsave(paste0(heatmap_dir,'ALL_DETEs_labelled.pdf'),
        phm_full,
@@ -445,7 +457,8 @@ phm_50 <- pheatmap(data_subset_50,
                    legend = TRUE,
                    show_rownames = T,
                    #cellwidth = 25,
-                   cellheight = 9,
+                   cellheight = 8,
+                   cellwidth = 8,
                    treeheight_col = 0,
                    treeheight_row = 50,
                    border_color = 'NA',
@@ -460,9 +473,6 @@ ggsave(paste0(heatmap_dir,'Top50_labelled.pdf'),
 #Export Heatmap per Family
 data_final_family <- cSplit(sig_counts_TE, "gene", ":")
 families_unique <- data_final_family$gene_3 %>% unique()
-
-clusters <- "2"
-
 dev.off()
 for (TE in families_unique) {
   data_final_family_select <- data_final_family %>% 
@@ -500,7 +510,100 @@ for (TE in families_unique) {
          dpi = 300)
 }
 
+#Grouped data final
+data_grouped <- data.frame(
+  #WT_PBS_male = rowMeans(select(data_final, contains(("WT_PBS_male")))),
+  WT_PBS_female = rowMeans(select(data_final, contains(("WT_PBS_female")))),
+  #WT_IFNa_male = rowMeans(select(data_final, contains(("WT_IFNa_male")))),
+  WT_IFNa_female = rowMeans(select(data_final, contains(("WT_IFNa_female")))),
+  #IFNAR_FL_FL_Veh_IFNa_male = rowMeans(select(data_final, contains(("IFNAR_FL_FL_Veh_IFNa_male")))),
+  IFNAR_FL_FL_Veh_IFNa_female = rowMeans(select(data_final, contains(("IFNAR_FL_FL_Veh_IFNa_female")))),
+  #IFNAR_FL_FL_Tam_IFNa_male = rowMeans(select(data_final, contains(("IFNAR_FL_FL_Tam_IFNa_male")))),
+  IFNAR_FL_FL_Tam_IFNa_female = rowMeans(select(data_final, contains(("IFNAR_FL_FL_Tam_IFNa_female"))))
+)
+
+
+data_grouped_50 <- data_grouped %>% head(n = 50)
+phm_50 <- pheatmap(data_grouped_50,
+                   color = colorRampPalette(c("navy", "white", "firebrick3"))(41),
+                   breaks = seq(-2, 2, by = 0.1),
+                   kmeans_k = NA,
+                   cluster_rows = T,
+                   cutree_row = clusters,
+                   cluster_cols = F,
+                   #cutree_cols = 4,
+                   #gaps_col = gaps,              
+                   legend = TRUE,
+                   show_rownames = T,
+                   #cellwidth = 25,
+                   cellheight = 8,
+                   cellwidth = 8,
+                   treeheight_col = 0,
+                   treeheight_row = 50,
+                   border_color = 'NA',
+                   fontsize = 8,
+                   scale = 'row')
+ggsave(paste0(heatmap_dir,'Top50_grouped_labelled.pdf'),
+       phm_50,
+       width = 15,
+       height = 15,
+       dpi = 300)
+
+#Export Heatmap per Family grouped 
+data_grouped <- data_grouped %>% rownames_to_column('gene')
+data_final_family <- cSplit(data_grouped, "gene", ":")
+families_unique <- data_final_family$gene_3 %>% unique()
+dev.off()
+for (TE in families_unique) {
+  data_final_family_select <- data_final_family %>% 
+    filter(gene_3 %in% TE) %>% head(20)
+  data_final_family_select$gene <- paste0(data_final_family_select$gene_1,":", data_final_family_select$gene_2,":", data_final_family_select$gene_3)
+  data_final_family_select <- data_final_family_select %>% 
+    select(!c("gene_1","gene_2", "gene_3")) %>%
+    column_to_rownames('gene')
+  height_heatmap <- as.numeric(paste0(nrow(data_final_family_select)))
+  phm_Fam <- pheatmap(data_final_family_select,
+                      color = colorRampPalette(c("navy", "white", "firebrick3"))(41),
+                      breaks = seq(-2, 2, by = 0.1),
+                      kmeans_k = NA,
+                      cluster_rows = T,
+                      cutree_row = clusters,
+                      cluster_cols = F,
+                      #cutree_cols = 4,
+                      #gaps_col = gaps,              
+                      legend = TRUE,
+                      show_rownames = T,
+                      main = paste(TE),
+                      cellwidth = 9,
+                      cellheight = 9,
+                      treeheight_col = 0,
+                      treeheight_row = 50,
+                      border_color = 'NA',
+                      fontsize = 8,
+                      scale = 'row')
+  ggsave(paste0(heatmap_dir, TE,'grouped_labelled.pdf'),
+         phm_Fam,
+         height = height_heatmap,
+         width = 20,
+         units = 'cm',
+         limitsize = FALSE,
+         dpi = 300)
+}
+
 #Heatmap for goi genes
+sig_export_grouped <- sig_export_padj %>% column_to_rownames('gene')
+data_grouped <- data.frame(
+  #WT_PBS_male = rowMeans(select(sig_export_grouped, contains(("WT_PBS_male")))),
+  WT_PBS_female = rowMeans(select(sig_export_grouped, contains(("WT_PBS_female")))),
+  #WT_IFNa_male = rowMeans(select(sig_export_grouped, contains(("WT_IFNa_male")))),
+  WT_IFNa_female = rowMeans(select(sig_export_grouped, contains(("WT_IFNa_female")))),
+  #IFNAR_FL_FL_Veh_IFNa_male = rowMeans(select(sig_export_grouped, contains(("IFNAR_FL_FL_Veh_IFNa_male")))),
+  IFNAR_FL_FL_Veh_IFNa_female = rowMeans(select(sig_export_grouped, contains(("IFNAR_FL_FL_Veh_IFNa_female")))),
+  #IFNAR_FL_FL_Tam_IFNa_male = rowMeans(select(sig_export_grouped, contains(("IFNAR_FL_FL_Tam_IFNa_male")))),
+  IFNAR_FL_FL_Tam_IFNa_female = rowMeans(select(sig_export_grouped, contains(("IFNAR_FL_FL_Tam_IFNa_female"))))
+)
+
+data_grouped <- data_grouped %>% rownames_to_column('gene')
 goi <- c("Ifih1",
          "Samhd1",
          "Cgas",
@@ -514,18 +617,20 @@ goi <- c("Ifih1",
          "Nlrp3",
          "Trex1",
          "Il33",
-         "Ccl4")
-data_final_goi <- sig_export %>% filter(gene %in% goi) %>% column_to_rownames('gene')
+         "Ccl4",
+         "Mavs",
+         "Sting")
+data_grouped_goi <- data_grouped %>% filter(gene %in% goi) %>% column_to_rownames('gene')
 
-phm_50 <- pheatmap(data_final_goi,
+phm_grouped_goi <- pheatmap(data_grouped_goi,
                    color = colorRampPalette(c("navy", "white", "firebrick3"))(41),
                    breaks = seq(-2, 2, by = 0.1),
                    kmeans_k = NA,
                    cluster_rows = T,
-                   cutree_row = 1,
+                   cutree_row = clusters,
                    cluster_cols = F,
                    #cutree_cols = 4,
-                   gaps_col = gaps,              
+                   #gaps_col = gaps,              
                    legend = TRUE,
                    show_rownames = T,
                    #cellwidth = 25,
@@ -537,10 +642,10 @@ phm_50 <- pheatmap(data_final_goi,
                    fontsize = 8,
                    scale = 'row')
 
-ggsave(paste0(heatmap_dir,'DNA_RNA_sensing.pdf'),
-       phm_50,
-       width = 15,
-       height = 15,
+ggsave(paste0(heatmap_dir,'DNA_RNA_sensing_grouped.pdf'),
+       phm_grouped_goi,
+       width = 5,
+       height = 5,
        dpi = 300)
 
 
@@ -628,60 +733,6 @@ ggsave(paste0(volcano_dir,"ALL_DETEs", '.pdf'),
        height = 20,
        units = c("cm"),
        dpi = 600)
-
-##All TEs labelled by TE family
-data_final_family <- cSplit(sig_res_TE, "gene", ":")
-data_final_family$log_pval <- -log10(data_final_family$pvalue)
-data_final_family$log_baseMean <- log10(data_final_family$baseMean)
-col_max <- max(data_final_family$log2FoldChange)
-yinterct <- min(data_final_family$log_pval)
-
-
-for (TE in families_unique) {
-  data_final_family_select <- data_final_family %>% 
-    filter(gene_3 %in% TE) 
-  data_final_family_select$gene <- paste0(data_final_family_select$gene_1,":", data_final_family_select$gene_2,":", data_final_family_select$gene_3)
-  data_final_family_select <- data_final_family_select %>% 
-    select(!c("gene_1","gene_2", "gene_3")) 
-  
-  data_final_family_spec <- data_final_family
-  data_final_family_spec$gene <- paste0(data_final_family_spec$gene_1,":", data_final_family_spec$gene_2,":", data_final_family_spec$gene_3)
-  
-  scatter_volcano <- ggplot(data_final_family_spec, aes(x= log2FoldChange, y= log_pval, label = gene)) +
-    geom_point(data = data_final_family_spec , fill = "grey60",size = 3, shape = 21, color = 'black') +
-    geom_point(data = data_final_family_select , fill = "firebrick3",size = 3, shape = 21, color = 'black') +
-    theme(aspect.ratio = 1, 
-          panel.background = element_blank(),
-          panel.border=element_rect(fill=NA),
-          panel.grid.major = element_blank(),
-          panel.grid.minor = element_blank(),
-          strip.background=element_blank(),
-          axis.title  = element_text(size = 20, colour = "black"),
-          axis.text.x=element_text(colour="black",size =20),
-          axis.text.y=element_text(colour="black",size =20),
-          axis.ticks=element_line(colour="black"),
-          legend.title = element_text(size = pointSize*0.5 , colour = "black"),
-          legend.text = element_text(size = pointSize*0.5 , colour = "black"),
-          legend.position = 'left',
-          plot.margin=unit(c(1,1,1,1),"line"),
-          plot.title = element_text(colour="black",size =20)) +
-    geom_vline(xintercept = 0,colour="grey", linetype = "longdash") +
-    geom_hline(yintercept = yinterct, colour="grey", linetype = "longdash") +
-    # geom_text_repel(data = data_final_family_select,
-    #                 color = 'black', size = 8,fontface = 'italic') +
-    labs(title = str_wrap(paste0(TE),60), x = "Log2FC", y = "-log(pvalue)") 
-  
-  ggsave(paste0(volcano_dir,TE,"highlighted", '.pdf'),
-         plot = scatter_volcano,
-         device = NULL,
-         path = NULL,
-         #scale = 1,
-         width = 10,
-         height = 10,
-         units = c("cm"),
-         dpi = 600)
-}
-
 
 
 ##### ----- DONUT PLOTS ----- #####
@@ -803,7 +854,7 @@ bar_data <- bar_data %>%
 
 
 lineWidth = 1
-pointSize = 30
+pointSize = 40
 barplot <- ggplot(bar_data, aes(x = UP_or_DOWN, y = n ,fill = UP_or_DOWN)) + 
   geom_bar(position = 'dodge', stat = 'summary', fun = mean, width = 0.7, colour="black") +
   expand_limits(x = 0, y = 0) +
@@ -825,18 +876,18 @@ barplot <- ggplot(bar_data, aes(x = UP_or_DOWN, y = n ,fill = UP_or_DOWN)) +
         legend.text = element_text(size = pointSize , colour = "black"),
         axis.line = element_line(size = lineWidth, colour = "black"),
         plot.margin = unit(c(0.5, 0.5, 0.5, 0.5), "cm")) + 
-  scale_fill_manual(values = c('navy','firebrick'))+
+  scale_fill_manual(values = c('navy','red3'))+
   #scale_fill_brewer(palette = "Paired") + 
   scale_y_continuous(expand = c(0, 0, .05, 0))
-barplot
+
 
 ggsave(paste0(donut_dir, bar_prefix,'_UP_and_DOWN_families', '.pdf'),
        plot = barplot,
        device = NULL,
        path = NULL,
        #scale = 1,
-       width = 8,
-       height = 15,
+       width = 15,
+       height = 30,
        units = c("cm"),
        dpi = 600)
 
