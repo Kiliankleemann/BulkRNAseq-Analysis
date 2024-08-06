@@ -2,11 +2,12 @@
 
 ### STAR ALIGNMENT
 #STAR  --runMode genomeGenerate --runThreadN 16 --genomeDir STAR_index_mm10 --genomeFastaFiles mm10_STAR/mm10.fa  --sjdbGTFfile mm10_STAR/mm10.refGene.gtf
+#CHANGE genomeDIR to STAR_index_mm10 for mouse!!!!
 mkdir BAM_files_multi
 cat sample_list.txt | while read sample; do
 	STAR --runThreadN 12 \
 	--readFilesIn fastq_files/trimmed_reads/${sample}.trimmed.fq.gz \
-	--genomeDir /media/kilian/OS/STAR_index_hg38 \
+	--genomeDir /media/kilian/OS/References/STAR_index_hg38 \
 	--outSAMtype BAM SortedByCoordinate  \
 	--runMode alignReads \
 	--outFilterMultimapNmax 100 \

@@ -10,7 +10,7 @@ OrgDb_name    <-  "org.Mm.eg.db" #human: 'org.Hs.eg.db'
 
 
 ##### --------- FGSEA analysis ####
-pathway_data <- read.xlsx(paste0('results/',file_prefix, '/DEGene_statistics_padj05.xlsx'))
+pathway_data <- read.xlsx(paste0('results/',file_prefix, '/DEGene_statistics_padj05.xlsx')) %>% filter(!grepl(':',gene))
 
 DEgenes <- pathway_data %>% filter(padj < 0.05)  %>% pull('gene')
 #DEgenes <- mapIds(org.Mm.eg.db, DEgenes, 'ENTREZID', 'SYMBOL')
@@ -22,7 +22,7 @@ DEG_Log2FC <- sort(DEG_Log2FC, decreasing = TRUE)
 DEG_Log2FC
 
 #####CURATED pathways
-pathways.all.curated <- gmtPathways("GSEA_database/m2.all.v2023.1.Mm.symbols.gmt") 
+pathways.all.curated <- gmtPathways("/media/kilian/OS/References/GSEA_database/m2.all.v2023.2.Mm.symbols.gmt") 
 fgseaRes <- fgsea(pathways=pathways.all.curated, stats=DEG_Log2FC)
 fgseaResTidy_curated <- fgseaRes %>%
   as_tibble() %>%

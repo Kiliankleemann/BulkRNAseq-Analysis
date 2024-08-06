@@ -1,9 +1,11 @@
+#Activate enrvironment 
+conda activate Bulk_RNA_TE_pipeline
+
 #Make fastq_folder
 mkdir fastq_files
 mv *.fq.gz fastq_files
 
 #Detect all samples in fastq_files folder
-echo 'Detected fastq samples'
 find ./fastq_files -name "*.fq.gz" -maxdepth 1 -type f -exec basename "{}" \; |  cut -d '.' -f1 | sort -u > sample_list.txt
 cat sample_list.txt
 
@@ -31,10 +33,12 @@ done
 #Check quality of samples
 multiqc QC/trimmed_reads -o QC/trimmed_reads
 
-#Running salmon against transcriptome
+#Running salmon against transcriptome 
+#CHECK TRANSCIPTOME!! 
+#Human: change mm10_salmon to hg38_salmon
 mkdir transcript_quant
 cat sample_list.txt | while read sample; 
-	do salmon quant -i /media/kilian/OS/mm10_salmon/ -l A -r fastq_files/trimmed_reads/${sample}.trimmed.fq.gz --validateMappings -o transcript_quant/${sample}_quant --threads 12
+	do salmon quant -i /media/kilian/OS/References/mm10_salmon/ -l A -r fastq_files/trimmed_reads/${sample}.trimmed.fq.gz --validateMappings -o transcript_quant/${sample}_quant --threads 12
 done
 
 
