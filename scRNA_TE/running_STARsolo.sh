@@ -8,7 +8,7 @@ cat sample_list.txt
 cat sample_list.txt | while read sample; do
 	STAR --runMode alignReads \
 	--soloType Droplet \
-	--genomeDir STAR_index_mm10 \
+	--genomeDir STAR_index_hg38 \
 	--readFilesIn fastq/${sample}_2.fastq.gz fastq/${sample}_1.fastq.gz \
 	--soloCBwhitelist reference/3M-february-2018.txt \
 	--outSAMtype BAM Unsorted \
