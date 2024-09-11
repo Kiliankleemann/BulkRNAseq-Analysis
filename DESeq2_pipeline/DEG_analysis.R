@@ -245,6 +245,7 @@ check_res <- dds_result %>%
 
 
 # Output files
+dir.create(paste0('results/', file_prefix))
 #Statistics
 write.xlsx(sig_res, file = paste0('results/', file_prefix, '/DEGene_statistics_pval05.xlsx'), overwrite = T)
 write.xlsx(sig_res_adj, file = paste0('results/', file_prefix, '/DEGene_statistics_padj05.xlsx'), overwrite = T)
