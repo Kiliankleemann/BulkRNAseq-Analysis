@@ -130,12 +130,28 @@ colSums(DS_norm_counts)
 # 
 
 
-#### -------- PCA ------- ####
+####### ------ PCA ------- ####
 # Transform counts for data visualization
 vst <- vst(dds_run, blind=TRUE)
+
 # Add nametags
-z <- plotPCA(vst, intgroup=c('Condition'),ntop = 200)
-theme_PCA <- theme(aspect.ratio = 1, 
+z <- plotPCA(vst, intgroup=c("Disease" , "Genotype" ,"Sex"),ntop = 200)
+
+#Adding extra group
+z$data$group_2 <- paste0(z$data$Disease,z$data$Genotype)
+#Calculating plotting ratio
+process_PC <- function(PC) {
+  PC <- gsub("^.*?\\s", "", PC)
+  PC <- gsub("% variance", "", PC)
+  PC <- as.numeric(PC)
+  return(PC)
+}
+PC1 <- process_PC(z$labels$x)
+PC2 <- process_PC(z$labels$y)
+PCA_plot_ratio <- PC2/PC1
+
+#Theme for PCA
+theme_PCA <- theme(aspect.ratio = PCA_plot_ratio, 
                    panel.background = element_blank(),
                    panel.border=element_rect(fill=NA),
                    panel.grid.major=element_blank(),
@@ -148,23 +164,32 @@ theme_PCA <- theme(aspect.ratio = 1,
                    plot.margin=unit(c(1,1,1,1),"line"))
 
 #Plot no labels
-dev.off()
 dir.create(paste0('plots/PCA/',file_prefix))
 pdf(file = paste0('plots/PCA/', file_prefix, '/PCA_top200.pdf'), pointsize = 10)
 ggplot(z$data,aes(x=z$data$PC1, y=z$data$PC2, )) +
-  geom_point(aes(color = group)) +
+  geom_point(aes(color = group_2, shape =Sex)) +
   theme_PCA +
-  labs(title = 'PCA (Top 200 variable genes)',   x=paste(z$labels$x), y=paste(z$labels$y))
+  labs(title = 'PCA (Top 200 variable genes)',   x=paste(z$labels$x), y=paste(z$labels$y)) +
+  stat_ellipse(aes(fill=group_2), geom = 'polygon',alpha = 0.1,level = 0.9)
 dev.off()
+
+# #second version
+# pdf(file = paste0('plots/PCA/', file_prefix, '/PCA2_top200.pdf'), pointsize = 10)
+# ggplot(z$data,aes(x=z$data$PC1, y=z$data$PC2, )) +
+#   geom_point(aes(color = group_2, shape =Sex)) +
+#   theme_PCA +
+#   labs(title = 'PCA (Top 200 variable genes)',   x=paste(z$labels$x), y=paste(z$labels$y)) +
+#   stat_ellipse(aes(fill=group_2), geom = 'polygon',alpha = 0.1,level = 0.6)
+# dev.off()
 
 #Plot with sample labels
 pdf(file = paste0('plots/PCA/', file_prefix,'/PCA_top200_labelled', '.pdf'), pointsize = 10)
 ggplot(z$data,aes(x=z$data$PC1, y=z$data$PC2, label = z$data$name)) +
-  geom_point(aes(color = group)) +
+  geom_point(aes(color = group_2, shape =Sex)) +
   theme_PCA + labs(title = 'PCA (Top 200 variable genes)',   x=paste(z$labels$x), y=paste(z$labels$y)) +
-  geom_text_repel(aes(label = experiment$Sample_ID),max.overlaps = Inf )
+  geom_text_repel(aes(label = experiment$Sample_ID),max.overlaps = Inf, size = 1) +
+  stat_ellipse(aes(fill=group_2), geom = 'polygon',alpha = 0.1,level = 0.9)
 dev.off()
-
 
 #### -------- OUTPUT TABLES & RESULTS ------- ####
 #unwanted_genes = paste(c('^Gm', '^mt-', '^Vmn', '^Rpl', '^Rps', '^Olfr','Rik'), collapse = '|')

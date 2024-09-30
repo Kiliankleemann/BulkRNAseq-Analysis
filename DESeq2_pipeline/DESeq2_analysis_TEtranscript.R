@@ -118,42 +118,66 @@ colSums(DS_norm_counts)
 # Transform counts for data visualization
 vst <- vst(dds_run, blind=TRUE)
 
-###### ----- PCA -----#####
-# Add nametags
-z <- plotPCA(vst, intgroup=c(comparison_variable),ntop = 200)
+####### ------ PCA ------- ####
+# Transform counts for data visualization
+vst <- vst(dds_run, blind=TRUE)
 
-lineWidth = 1
-pointSize = 20
-theme_PCA <- theme(aspect.ratio = 1, 
+# Add nametags
+z <- plotPCA(vst, intgroup=c("Disease" , "Genotype" ,"Sex"),ntop = 200)
+
+#Adding extra group
+z$data$group_2 <- paste0(z$data$Disease,z$data$Genotype)
+#Calculating plotting ratio
+process_PC <- function(PC) {
+  PC <- gsub("^.*?\\s", "", PC)
+  PC <- gsub("% variance", "", PC)
+  PC <- as.numeric(PC)
+  return(PC)
+}
+PC1 <- process_PC(z$labels$x)
+PC2 <- process_PC(z$labels$y)
+PCA_plot_ratio <- PC2/PC1
+
+#Theme for PCA
+theme_PCA <- theme(aspect.ratio = PCA_plot_ratio, 
                    panel.background = element_blank(),
-                   panel.border=element_rect(fill=NA, size = lineWidth),
+                   panel.border=element_rect(fill=NA),
                    panel.grid.major=element_blank(),
                    panel.grid.minor=element_blank(),
                    strip.background=element_blank(),
-                   line = element_line(size = lineWidth, colour = "black"),
-                   plot.title  = element_text(color="black", size=pointSize),
-                   axis.title  = element_text(size = pointSize, colour = "black"),
-                   axis.text.x  = element_text(size = pointSize , colour = "black"),
-                   axis.text.y  = element_text(size = pointSize , colour = "black"),
+                   axis.text.x=element_text(colour="black"),
+                   axis.text.y=element_text(colour="black"),
                    axis.ticks=element_line(colour="black"),
                    legend.key=element_blank(),
                    plot.margin=unit(c(1,1,1,1),"line"))
 
-pdf(file = paste0('plots/PCA/', file_prefix, '.pdf'), pointsize = 5, width = 5, height = 10)
+#Plot no labels
+dir.create(paste0('plots/PCA/',file_prefix))
+pdf(file = paste0('plots/PCA/', file_prefix, '/PCA_top200.pdf'), pointsize = 10)
 ggplot(z$data,aes(x=z$data$PC1, y=z$data$PC2, )) +
-  geom_point(aes(color = group), size = 4) +
-  theme_PCA + labs(title = 'PCA (Top 200 variable genes)',   x=paste(z$labels$x), y=paste(z$labels$y)) +
-  scale_color_brewer(palette = 'Set1')
-dev.off()
-
-
-pdf(file = paste0('plots/PCA/', file_prefix,'_labelled', '.pdf'), pointsize = 10)
-ggplot(z$data,aes(x=z$data$PC1, y=z$data$PC2, label = z$data$name)) +
-  geom_point(aes(color = group)) + theme_PCA + 
+  geom_point(aes(color = group_2, shape =Sex)) +
+  theme_PCA +
   labs(title = 'PCA (Top 200 variable genes)',   x=paste(z$labels$x), y=paste(z$labels$y)) +
-  geom_text_repel(aes(label = sample_data$Sample_ID),max.overlaps = Inf )
+  stat_ellipse(aes(fill=group_2), geom = 'polygon',alpha = 0.1,level = 0.9)
 dev.off()
 
+# #second version
+# pdf(file = paste0('plots/PCA/', file_prefix, '/PCA2_top200.pdf'), pointsize = 10)
+# ggplot(z$data,aes(x=z$data$PC1, y=z$data$PC2, )) +
+#   geom_point(aes(color = group_2, shape =Sex)) +
+#   theme_PCA +
+#   labs(title = 'PCA (Top 200 variable genes)',   x=paste(z$labels$x), y=paste(z$labels$y)) +
+#   stat_ellipse(aes(fill=group_2), geom = 'polygon',alpha = 0.1,level = 0.6)
+# dev.off()
+
+#Plot with sample labels
+pdf(file = paste0('plots/PCA/', file_prefix,'/PCA_top200_labelled', '.pdf'), pointsize = 10)
+ggplot(z$data,aes(x=z$data$PC1, y=z$data$PC2, label = z$data$name)) +
+  geom_point(aes(color = group_2, shape =Sex)) +
+  theme_PCA + labs(title = 'PCA (Top 200 variable genes)',   x=paste(z$labels$x), y=paste(z$labels$y)) +
+  geom_text_repel(aes(label = experiment$Sample_ID),max.overlaps = Inf, size = 1) +
+  stat_ellipse(aes(fill=group_2), geom = 'polygon',alpha = 0.1,level = 0.9)
+dev.off()
 
 ###### ----- SIG DATA & EXPORT -----#####
 # Build significant gene table and extract list of sorted DE genes.
