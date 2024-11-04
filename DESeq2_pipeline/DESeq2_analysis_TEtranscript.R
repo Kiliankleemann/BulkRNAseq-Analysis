@@ -644,6 +644,7 @@ goi <- c("Ifih1",
          "Ccl4",
          "Mavs",
          "Sting")
+
 data_grouped_goi <- data_grouped %>% filter(gene %in% goi) %>% column_to_rownames('gene')
 
 phm_grouped_goi <- pheatmap(data_grouped_goi,
