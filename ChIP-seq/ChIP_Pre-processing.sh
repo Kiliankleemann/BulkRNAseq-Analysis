@@ -1,6 +1,6 @@
 #!/bin/bash
 echo 'Detected following samples'
-find ./fastq -name "*.fastq.gz" -maxdepth 1 -type f -exec basename "{}" \; |  cut -d'_' -f1 | sort -u > sample_list.txt
+find ./fastq_files -name "*.fastq" -maxdepth 1 -type f -exec basename "{}" \; |  cut -d'_' -f1 | sort -u > sample_list.txt
 cat sample_list.txt
 
 #echo 'Unzipping files'
@@ -9,7 +9,7 @@ cat sample_list.txt
 echo 'Checking quality of untrimmed reads'
 mkdir QC
 mkdir QC/untrimmed
-fastqc fastq/*.fastq.gz -t 2 -o 'QC/untrimmed'
+fastqc fastq_files/*.fastq -t 2 -o 'QC/untrimmed'
 multiqc QC/untrimmed -o QC/untrimmed
 
 echo 'Trimming reads - stand by'
@@ -27,7 +27,7 @@ multiqc QC/trimmed -o QC/trimmed
 echo 'Performing Bowtie2 alignment to SAM files'
 mkdir SAM_files
 cat sample_list.txt | while read sample; do
-	bowtie2 -p 4 -q --local -x ~/Desktop/mm10/mm10 -1 fastq/trimmed_reads/${sample}.1.trimmed.fastq.gz -2 fastq/trimmed_reads/${sample}.2.trimmed.fastq.gz -S SAM_files/${sample}.unsorted.sam
+	bowtie2 -p 4 -q --local -x ~/Desktop/hg38/hg38 -1 fastq_files/${sample}_1.fastq -2 fastq_files/${sample}_2.fastq -S SAM_files/${sample}.unsorted.sam
 done
 
 #echo 'Zipping untrimmed files'
