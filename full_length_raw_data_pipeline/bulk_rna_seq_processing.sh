@@ -1,16 +1,20 @@
+mkdir fastq_files
+mv *.fastq.gz fastq_files
+
 #Edit fastq  ending of file and symbol to cut the name 
-find ./fastq_files -name "*.fq.gz" -maxdepth 1 -type f -exec basename "{}" \; |  cut -d '_' -f1 | sort -u > sample_list.txt
+find ./fastq_files -name "*.fastq.gz" -maxdepth 1 -type f -exec basename "{}" \; |  cut -d '_' -f1 | sort -u > sample_list.txt
 cat sample_list.txt
 
 #Running fastq for all files
-mkdir fastq_files/QC
-fastqc fastq_files/*.fq.gz -t 12
+mkdir QC
+fastqc fastq_files/*.fastq.gz -t 12 -o QC
 
 #Move all fastqc reports into the QC folder 
 mv fastq_files/*fastqc* QC/
 
 #Make quality overview
 multiqc QC/
+
 
 
 #Running cutadapt for adapter trimming 
