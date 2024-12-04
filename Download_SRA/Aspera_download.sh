@@ -1,6 +1,6 @@
 #install Aspera
 mkdir ~/Desktop/Aspera
-cd Aspera
+cd ~/Desktop/Aspera
 wget https://d3gcli72yxqn2z.cloudfront.net/downloads/connect/latest/bin/ibm-aspera-connect_4.2.12.780_linux_x86_64.tar.gz
 tar xvf ibm-aspera-connect_4.2.12.780_linux_x86_64.tar.gz 
 bash ibm-aspera-connect_4.2.12.780_linux_x86_64.sh
@@ -22,7 +22,7 @@ WXup2ac0Co+RnZp7Hsa9G+E+iJ6poI9pOR08XTdPly4yDULNST4PwlfrbSFT9FVh
 zkWfpOvAUc8fkQAhZqv/PE6VhFQ8w03Z8GpqXx7b3NvBR+EfIx368KoCFEyfl0vH
 Ta7g6mGwIMXrdTQQ8fZs
 -----END DSA PRIVATE KEY-----
-mv '/home/xinwei/Desktop/Aspera/asperaweb_id_dsa.openssh' ~/.aspera/connect/etc
+mv '/home/kilian/Desktop/asperaweb_id_dsa.openssh' ~/.aspera/connect/etc
 ##find the position 
 find ~ -name asperaweb_id_dsa.openssh #/home/xinwei/.aspera/connect/etc/asperaweb_id_dsa.openssh #good 
 # download single file for two side reads (delete _1 if it is only one)
@@ -30,6 +30,8 @@ ascp  -v -Q -T -l 200m -P 33001 -k 1 -i ~/.aspera/connect/etc/asperaweb_id_dsa.o
 #for SRR+8 number such as /SRR134/067/SRR13424567/: "SRR134/" from the first 3 num ; "067/" from 0 + the last two number 67
 #for SRR+7 number such as /SRR134/006/SRR1342456/ : "SRR134/" from the first 3 num ; "006/" from 00 + the last number 6
 #for SRR+6 number such as /SRR134/SRR134245/  : "SRR134/" from the first 3 num without the middle file
+
+ascp -QT -l 300m -P 33001 -i /path/to/asperaweb_id_dsa.putty user@server:/path/to/remote_file /path/to/local_destination
 
 #download multiple task
 ## set the 
