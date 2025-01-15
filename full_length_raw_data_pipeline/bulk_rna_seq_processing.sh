@@ -59,6 +59,18 @@ cat sample_list.txt | while read sample; do
 	samtools index BAM_files_multi_trimmed/${sample}Aligned.sortedByCoord.out.bam
 done
 
+#Output metrics
+mkdir Picard_metrics
+cat sample_list.txt | while read sample; do
+picard CollectRnaSeqMetrics \
+    I=BAM_files_multi/${sample}Aligned.sortedByCoord.out.bam \
+    O=Picard_metrics/${sample}_output_rna_metrics.txt \
+    REF_FLAT=/media/kilian/OS/References/GTF_files_TEtranscript/mm10_refFlat.txt \
+    STRAND_SPECIFICITY=NONE \
+    R=/media/kilian/OS/References/GTF_files_TEtranscript/mm10.fa
+done
+
+
 #Running TEtranscript
 #Download required files (for mouse)
 mkdir GTF_files_TEtranscript
