@@ -47,3 +47,14 @@ zcat hg38.fa.gz > hg38.fa
 bwa index hg38.fa
 
 bash generate_L1EM_fasta_and_index.sh /media/kilian/OS/References/BWA_hg38/hg38.fa
+
+cat sample_list.txt | while read sample; do
+	mkdir L1EM_${sample}
+	cd L1EM_${sample}
+	bash /home/kilian/L1EM/run_L1EM.sh \
+/media/kilian/DATA/Aref_DNA_damage/BAM_files_multi/${sample}Aligned.sortedByCoord.out.bam \
+/home/kilian/L1EM /media/kilian/OS/GTF_files_TEtranscript/BWA_hg38/hg38.fa
+	cd ..
+done
+
+
