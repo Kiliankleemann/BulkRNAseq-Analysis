@@ -163,6 +163,38 @@ theme_PCA <- theme(aspect.ratio = PCA_plot_ratio,
                    legend.key=element_blank(),
                    plot.margin=unit(c(1,1,1,1),"line"))
 
+# Assuming you have a DESeqTransform object called 'rld' (from rlog or vst transformation)
+pca_data <- plotPCA(vst, intgroup = "Group", returnData = TRUE)
+
+# Extract normalized data from the rlog or vst object
+norm_data <- assay(vst)
+# Remove genes with zero variance across samples
+norm_data_filtered <- norm_data[rowVars(norm_data) > 0, ]
+
+# Perform PCA
+pca_result <- prcomp(t(norm_data_filtered), scale. = TRUE)
+
+# Extract loadings
+loadings <- pca_result$rotation
+
+# Get top contributing genes for PC1 and PC2
+top_genes_PC1 <- names(sort(abs(loadings[, 1]), decreasing = TRUE)[1:10])
+top_genes_PC2 <- names(sort(abs(loadings[, 2]), decreasing = TRUE)[1:10])
+
+# Combine top genes
+top_genes <- unique(c(top_genes_PC1, top_genes_PC2))
+
+# Prepare data for ggplot
+pca_data <- as.data.frame(pca_result$x)
+pca_data$sample <- rownames(pca_data)
+
+# Add labels for top contributing genes
+gene_labels <- as.data.frame(loadings[top_genes, c(1, 2)])
+gene_labels$gene <- rownames(gene_labels)
+
+# Subset PCA results for the top genes
+loadings_top <- loadings[top_genes, ]
+
 #Plot no labels
 dir.create(paste0('plots/PCA/',file_prefix))
 pdf(file = paste0('plots/PCA/', file_prefix, '/PCA_top200.pdf'), pointsize = 10)
