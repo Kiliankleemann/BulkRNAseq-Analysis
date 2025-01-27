@@ -55,7 +55,7 @@ cat sample_list.txt | while read sample; do
  -o featureCounts_out/${sample}_featurecounts_output.txt BAM_files_multi/${sample}Aligned.sortedByCoord.out.bam
 done
 
-#Try
+
 
 #HUMAN
 #Filter out only L1HS elements in repeatmasker file
@@ -63,11 +63,16 @@ wget http://hgdownload.soe.ucsc.edu/goldenPath/hg38/database/rmsk.txt.gz
 gunzip rmsk.txt.gz
 
 
+awk '$0 ~ /gene_id "L1HS/' hg38_rmsk.gtf > hg38_rmsk_L1HS.gtf
+
+
+#filter out transcript overlapping L1HS
+wget http://hgdownload.soe.ucsc.edu/goldenPath/hg38/bigZips/genes/hg38.refGene.gtf.gz
+gunzip hg38.refGene.gtf.gz
 #filtering out only instances of full transcripts HUMAN
-/media/kilian/OS/BulkRNAseq-Analysis/Modifications_TEtranscript_analysis/filter_gtf.sh gencode.vM10.annotation.gtf > gencode.vM10.transcripts_filtered.gtf
+/media/kilian/OS/BulkRNAseq-Analysis/Modifications_TEtranscript_analysis/filter_gtf.sh hg38.refGene.gtf > hg38.transcripts_filtered.gtf
 
-
-awk '$0 ~ /gene_id "L1HS/' GRCh38_GENCODE_rmsk_TE.gtf > GRCh38_GENCODE_rmsk_L1HS.gtf
+bedtools subtract -A -a GRCh38_GENCODE_rmsk_L1HS.gtf -b hg38.transcripts_filtered.gtf > GRCh38_GENCODE_rmsk_L1HS_filtered.gtf
 
 
 #Modify the gtf file to suit featureCounts counting!
@@ -99,9 +104,6 @@ echo "Modified GTF file saved to $OUTPUT_GTF"
 
 
 
-#filter out transcript overlapping L1HS
-bedtools subtract -A -a mm10_L1Md.gtf -b mm10.transcripts_filtered.gtf > mm10_L1Md_filtered.gtf
-
 
 #FeatureCounts human with intronic L1
 mkdir featureCounts_out
@@ -109,3 +111,8 @@ cat sample_list.txt | while read sample; do
     featureCounts -p -B -C -M --fraction -s 2 -T 8 -a /media/kilian/OS/References/GTF_files_featureCounts_hg38/GRCh38_GENCODE_rmsk_L1HS_unique.gtf \
  -o featureCounts_out/${sample}_featurecounts_output.txt BAM_files_multi/${sample}Aligned.sortedByCoord.out.bam
 done
+
+
+
+
+
