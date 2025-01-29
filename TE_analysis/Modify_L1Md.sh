@@ -1,7 +1,7 @@
 #!/bin/bash
 # Input and output file paths
-INPUT_GTF="mm10_L1Md_filtered.gtf"
-OUTPUT_GTF="mm10_L1Md_filtered_unique.gtf"
+INPUT_GTF="mm10_L1Md.gtf"
+OUTPUT_GTF="mm10_L1Md_unique.gtf"
 
 # Initialize a counter
 counter=1
