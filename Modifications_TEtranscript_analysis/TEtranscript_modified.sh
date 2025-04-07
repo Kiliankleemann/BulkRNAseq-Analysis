@@ -14,7 +14,7 @@ gzip -d *.gz
 #Removing all TE counts from repeatmasker which overlap with refGene.gtf
 bedtools subtract -A -a GRCm38_GENCODE_rmsk_TE.gtf -b mm10.transcripts_filtered.gtf > GRCm38_GENCODE_rmsk_TE_filtered.gtf
 
-bedtools subtract -A -a GRCh38_GENCODE_rmsk_TE.gtf -b GRCh38.transcripts_filtered.gtf > GRCm38_GENCODE_rmsk_TE_filtered.gtf
+bedtools subtract -A -a GRCh38_GENCODE_rmsk_TE.gtf -b GRCh38.transcripts_filtered.gtf > GRCh38_GENCODE_rmsk_TE_filtered.gtf
 
 
 #Only L1Md family members
