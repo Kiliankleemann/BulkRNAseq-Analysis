@@ -91,6 +91,9 @@ done
 #	samtools  view -h BAM_files/sorted/${sample}.sorted.bam  |  removeChrom - - chrM  |  samtools view -b - > BAM_files/sorted/${sample}.sorted.bam
 #done
 
+#Human 2913022398
+#Mouse 2652783500
+
 
 echo "Making BIGWIG_files"
 mkdir BIGWIG_files
