@@ -1,37 +1,33 @@
 mkdir fastq_files
-mv *.fastq.gz fastq_files
+mv *.fq.gz fastq_files
 
 #Edit fastq  ending of file and symbol to cut the name 
-find ./fastq_files -name "*.fastq.gz" -maxdepth 1 -type f -exec basename "{}" \; |  cut -d '_' -f1 | sort -u > sample_list.txt
+find ./fastq_files -name "*.fq.gz" -maxdepth 1 -type f -exec basename "{}" \; |  cut -d '_' -f1 | sort -u > sample_list.txt
 cat sample_list.txt
 
 #Running fastq for all files
 mkdir QC
-fastqc fastq_files/*.fastq.gz -t 12 -o QC
-
-#Move all fastqc reports into the QC folder 
-mv fastq_files/*fastqc* QC/
+fastqc fastq_files/*.fq.gz -t 12 -o QC
 
 #Make quality overview
-multiqc QC/
-
-
+multiqc QC/ -o QC
 
 #Running cutadapt for adapter trimming 
 mkdir fastq_files/trimmed_reads
 cat sample_list.txt | while read sample; do
-	cutadapt --cores 12 --minimum-length 15 -a AGATCGGAAGAGCACACGTCTGAACTCCAGTC -A AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGT -o fastq_files/trimmed_reads/${sample}.1.trimmed.fastq.gz -p fastq_files/trimmed_reads/${sample}.2.trimmed.fastq.gz fastq_files/${sample}_L2_1.fq.gz fastq_files/${sample}_L2_2.fq.gz
+	cutadapt --cores 12 --minimum-length 15 --poly-a -a AGATCGGAAGAGCACACGTCTGAACTCCAGTCA -A AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGT -o fastq_files/trimmed_reads/${sample}.1.trimmed.fastq.gz -p fastq_files/trimmed_reads/${sample}.2.trimmed.fastq.gz fastq_files/${sample}_1.fq.gz fastq_files/${sample}_2.fq.gz
 done
 
 #Running fastqc on the filtered reads
-fastqc -t 12 fastq_files/trimmed_reads/*.fq.gz 
-multiqc fastq_files/trimmed_reads/
-#Check that adapter have been trimmed
+mkdir QC/trimmed_reads
+fastqc -t 12 fastq_files/trimmed_reads/*.fastq.gz
+multiqc fastq_files/trimmed_reads/ -o QC/trimmed_reads
+
 
 #Running salmon against transcriptome
 mkdir transcript_quant
 cat sample_list.txt | while read sample; 
-	do salmon quant -i /media/kilian/OS/References/mm10_salmon/ -l A -1 fastq_files/${sample}_L1_1.fq.gz -2 fastq_files/${sample}_L1_2.fq.gz --validateMappings -o transcript_quant/${sample}_quant --thread 8
+	do salmon quant -i /media/kilian/OS/References/mm10_salmon/ -l A -1 fastq_files/trimmed_reads/${sample}.1.trimmed.fastq.gz -2 fastq_files/trimmed_reads/${sample}.2.trimmed.fastq.gz --validateMappings -o transcript_quant/${sample}_quant --thread 8
 done
 
 ### STAR ALIGNMENT for TE analysis

@@ -14,6 +14,9 @@ gzip -d *.gz
 #Removing all TE counts from repeatmasker which overlap with refGene.gtf
 bedtools subtract -A -a GRCm38_GENCODE_rmsk_TE.gtf -b mm10.transcripts_filtered.gtf > GRCm38_GENCODE_rmsk_TE_filtered.gtf
 
+bedtools subtract -A -a GRCh38_GENCODE_rmsk_TE.gtf -b GRCh38.transcripts_filtered.gtf > GRCh38_GENCODE_rmsk_TE_filtered.gtf
+
+
 #Only L1Md family members
 #Filter out only L1Md_T elements
 awk '$0 ~ /gene_id "L1Md/' GRCm38_GENCODE_rmsk_TE.gtf > GRCm38_GENCODE_L1Md.gtf
@@ -25,7 +28,6 @@ awk '$0 ~ /gene_id "L1Md/' GRCm38_GENCODE_rmsk_TE.gtf > GRCm38_GENCODE_L1Md.gtf
 #Filter out L1Md overlapping annotated genes
 bedtools subtract -A -a GRCm38_GENCODE_L1Md.gtf -b mm10.transcripts_filtered.gtf > GRCm38_GENCODE_rmsk_TE_filtered.gtf
 
-#
 
 
 convert2bed -i gtf < GRCm38_GENCODE_rmsk_TE.gtf > GRCm38_GENCODE_rmsk_TE.bed
