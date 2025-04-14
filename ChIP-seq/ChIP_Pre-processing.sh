@@ -9,14 +9,14 @@ cat sample_list.txt
 echo 'Checking quality of untrimmed reads'
 mkdir QC
 mkdir QC/untrimmed
-fastqc fastq_files/*.fastq -t 2 -o 'QC/untrimmed'
+fastqc fastq_files/*.fq.gz -t 2 -o 'QC/untrimmed'
 multiqc QC/untrimmed -o QC/untrimmed
 
 echo 'Trimming reads - stand by'
-mkdir fastq/trimmed_reads
+mkdir fastq_files/trimmed_reads
 cat sample_list.txt | while read sample; do
 	echo $sample
-	cutadapt --cores 0 --minimum-length 15 -a AGATCGGAAGAGCACACGTCTGAACTCCAGTC -A AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGT -o fastq/trimmed_reads/${sample}.1.trimmed.fastq.gz -p fastq/trimmed_reads/${sample}.2.trimmed.fastq.gz fastq/${sample}_R1_001.fastq fastq/${sample}_R2_001.fastq
+	cutadapt --cores 0 --minimum-length 15 -a AGATCGGAAGAGCACACGTCTGAACTCCAGTC -A AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGT -o fastq_files/trimmed_reads/${sample}.1.trimmed.fastq.gz -p fastq_files/trimmed_reads/${sample}.2.trimmed.fastq.gz fastq_files/${sample}_L1_1.fq.gz fastq_files/${sample}_L1_2.fq.gz
 done
 
 echo 'Checking quality of trimmed_reads'
