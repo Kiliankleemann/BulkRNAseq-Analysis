@@ -21,7 +21,7 @@ done
 
 echo 'Checking quality of trimmed_reads'
 mkdir QC/trimmed
-fastqc fastq/trimmed_reads/*.fastq.gz -t 4 -o 'QC/trimmed'
+fastqc fastq_files/trimmed_reads/*.fastq.gz -t 4 -o 'QC/trimmed'
 multiqc QC/trimmed -o QC/trimmed 
 
 echo 'Performing Bowtie2 alignment to SAM files'
@@ -29,6 +29,22 @@ mkdir SAM_files
 cat sample_list.txt | while read sample; do
 	bowtie2 -p 4 -q --local -x ~/Desktop/hg38/hg38 -1 fastq_files/${sample}_1.fastq -2 fastq_files/${sample}_2.fastq -S SAM_files/${sample}.unsorted.sam
 done
+
+#OR
+
+echo 'Performing STAR alignment to SAM files'
+#Unique alignment with STAR
+cat sample_list.txt | while read sample; do
+	STAR --runThreadN 12 \
+	--readFilesIn fastq_files/trimmed_reads/${sample}.1.trimmed.fq.gz fastq_files/trimmed_reads/${sample}.2.trimmed.fq.gz  \
+	--genomeDir /media/kilian/OS/reference/STAR_index_mm10 \
+	--outSAMtype BAM SortedByCoordinate  \
+	--runMode alignReads \
+	--outFileNamePrefix BAM_files_sorted/${sample} \
+	--readFilesCommand zcat \
+	--outTmpDir /media/kilian/OS/STAR_tmp
+done
+
 
 #echo 'Zipping untrimmed files'
 #gzip fastq/*.fastq
