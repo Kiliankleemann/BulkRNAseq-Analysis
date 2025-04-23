@@ -9,7 +9,7 @@ cat sample_list.txt
 echo 'Checking quality of untrimmed reads'
 mkdir QC
 mkdir QC/untrimmed
-fastqc fastq_files/*.fq.gz -t 2 -o 'QC/untrimmed'
+fastqc fastq_files/*.fq.gz -t 8 -o 'QC/untrimmed'
 multiqc QC/untrimmed -o QC/untrimmed
 
 echo 'Trimming reads - stand by'
