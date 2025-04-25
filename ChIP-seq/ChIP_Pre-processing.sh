@@ -32,11 +32,11 @@ done
 
 #OR
 
-echo 'Performing STAR alignment to SAM files'
+
 #Unique alignment with STAR
 cat sample_list.txt | while read sample; do
 	STAR --runThreadN 12 \
-	--readFilesIn fastq_files/trimmed_reads/${sample}.1.trimmed.fq.gz fastq_files/trimmed_reads/${sample}.2.trimmed.fq.gz  \
+	--readFilesIn fastq_files/trimmed_reads/${sample}.1.trimmed.fastq.gz fastq_files/trimmed_reads/${sample}.2.trimmed.fastq.gz  \
 	--genomeDir /media/kilian/OS/reference/STAR_index_mm10 \
 	--outSAMtype BAM SortedByCoordinate  \
 	--runMode alignReads \
