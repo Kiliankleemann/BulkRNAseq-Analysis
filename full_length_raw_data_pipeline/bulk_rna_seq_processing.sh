@@ -31,6 +31,7 @@ cat sample_list.txt | while read sample;
 done
 
 ### STAR ALIGNMENT for TE analysis
+
 #STAR  --runMode genomeGenerate --runThreadN 16 --genomeDir STAR_index_mm10 --genomeFastaFiles mm10_STAR/mm10.fa  #--sjdbGTFfile mm10_STAR/mm10.refGene.gtf
 mkdir BAM_files_multi_trimmed
 cat sample_list.txt | while read sample; do
@@ -50,9 +51,32 @@ cat sample_list.txt | while read sample; do
 	--readFilesCommand zcat 
 done
 
+#core facility command
+mkdir BAM_files_multi
+cat sample_list.txt | while read sample; do
+	STAR --runThreadN 8 \
+	--readFilesIn fastq_files/${sample}_R1.fastq.gz fastq_files/${sample}_R2.fastq.gz \
+	--genomeDir /media/kilian/OS/References/STAR_index_mm10 \
+	--outSAMtype BAM SortedByCoordinate  \
+	--runMode alignReads \
+	--outFilterMultimapNmax 100 \
+	--winAnchorMultimapNmax 100 \
+	--alignSJDBoverhangMin 1 \
+	--outSAMstrandField intronMotif \
+	--outFileNamePrefix BAM_files_multi_cf/${sample} \
+	--readFilesCommand zcat \
+	--outTmpDir /media/kilian/OS/STAR_tmp
+done
+
 #Index files
 cat sample_list.txt | while read sample; do
 	samtools index BAM_files_multi_trimmed/${sample}Aligned.sortedByCoord.out.bam
+done
+
+#Identify strandedness
+mkdir stranded_info
+cat sample_list.txt | while read sample; do
+	infer_experiment.py -r /media/kilian/OS/References/GTF_files_TEtranscript/GRCm38_GENCODE_rmsk_TE.bed -i BAM_files_multi_trimmed/${sample}Aligned.sortedByCoord.out.bam > stranded_info/${sample}.txt
 done
 
 #Output metrics
