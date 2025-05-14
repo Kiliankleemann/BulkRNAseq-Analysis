@@ -55,33 +55,4 @@ bedtools intersect -s -wa -a GRCh38_GENCODE_rmsk_TE.gtf -b GRCh38.transcripts_fi
 bedtools intersect -wa -a GRCh38_GENCODE_rmsk_TE.gtf -b GRCh38.transcripts_filtered.gtf > GRCh38_rmsk_TE_transcript_overlap_wa_nostrandedness.gtf
 
 
-#Multimapping
-#TEtranscript
-mkdir TETranscripts_multi
-TEtranscripts -t  \
-                     -c 
-                     --GTF /media/kilian/OS/GTF_files_TEtranscript/mm10.refGene.gtf \
-                     --TE /media/kilian/OS/GTF_files_TEtranscript/GRCm38_GENCODE_rmsk_TE_filtered.gtf \
-                     --mode multi \
-                     --outdir TETranscripts_multi \
-                     --sortByPos
-
-
-
-#Quantification of TEs with Stringtie
-mkdir stringtie_output_TE_RMSK
-cat sample_list.txt | while read sample; 
-	do stringtie -e -B -p 8 -G reference/GRCm38_GENCODE_rmsk_TE.gtf -o stringtie_output_TE_RMSK/${sample}/${sample}.gtf BAM_files/${sample}Aligned.sortedByCoord.out.bam 
-done
-
-mkdir stringtie_output_TE_RMSK
-cat sample_list.txt | while read sample; 
-	do stringtie -e -B -p 8 -G reference/GRCm38_GENCODE_rmsk_TE.gtf -o stringtie_output_TE_RMSK/${sample}/${sample}.gtf BAM_files/${sample}Aligned.sortedByCoord.out.bam 
-done
-
-#Running Python script to extract raw counts
-cd stringtie_output_TE_RMSK
-python /media/kilian/OS/Melani_THP1_August_2023/scripts_analysis/prepDE.py3
-
-
 
