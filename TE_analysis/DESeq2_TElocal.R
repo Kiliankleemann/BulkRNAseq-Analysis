@@ -1,7 +1,7 @@
 #### -------- INSTALLING AND LOADING PACKAGES ------- ####
-list.of.packages <- c("BiocGenerics","tximport","S4Vectors", "DESeq2", "biomaRt",
+list.of.packages <- c("BiocGenerics","tximport","S4Vectors", "DESeq2", "biomaRt",'splitstackshape',
                       "ggplot2", "ggsignif", "ggpubr", "sva", "devtools", "org.Hs.eg.db", 
-                      "org.Mm.eg.db", "limma","stringr","KEGGREST","ggrepel", "openxlsx", 'splitstackshape',
+                      "org.Mm.eg.db", "limma","stringr","KEGGREST","ggrepel", "openxlsx", 
                       "fgsea","clusterProfiler","pheatmap","ggpubr","cowplot",'dplyr','janitor',
                       "RColorBrewer",'AnnotationDbi', 'tidyverse','pheatmap', 'dendextend')
 
@@ -14,7 +14,7 @@ invisible(lapply(list.of.packages, library, character.only = TRUE))
 
 
 ###### ----- SETTING WORK DIRECTORY AND CREATE OUTPUT FOLDERS-----#####
-setwd("")
+setwd("/Users/kiliankleemann/sciebo - Kleemann, Kilian (kleemann@uni-bonn.de)@uni-bonn.sciebo.de/AvM_KLK_BMDM_LPS_Chronic_Acute_FL_PE_241217_P2024-260-RNA")
 
 dir.create('results')
 dir.create('plots')
@@ -27,17 +27,16 @@ dir.create('plots/heatmaps')
 
 ###### ----- FILE PREPARATION -----#####
 # Create a metadata map using your metadata file.
-sample_data <- read.xlsx("metadata/metadata.xlsx", sheet = 1)
-
-#Sample data editing:
-#sample_data <- sample_data %>% `colnames<-`(c("Sample_ID", "Genotype", "Treatment", "Timepoint"))
-#sample_data$Genotype <- gsub('xxx ', '', sample_data$Genotype)
-
+sample_data <- read.xlsx("metadata.xlsx", sheet = 1)
 #Outlier removal - Potentially from QC analysis
 sample_data <- sample_data %>% unique()
 outliers = c('')
 sample_data <- sample_data %>%            
   filter(!Sample_ID %in% outliers)
+sample_data$Group <- paste0(sample_data$treatment,"_",sample_data$timepoint)
+
+#Select dataset for comparison
+sample_data <- sample_data %>% filter(Group %in% c("control_7d","LPS_7d"))
 
 
 #Import TElocal locus sepcific information !! CHECK FOR HUMAN OR MOUSE !!
@@ -62,20 +61,17 @@ TElocal_counts_all2 <- TElocal_counts_all[,-1]
 rownames(TElocal_counts_all2) <- TElocal_counts_all[,1]
 
 TElocal_counts_all3 <- TElocal_counts_all2 %>% dplyr::select(!contains('gene/TE'))
-
 TElocal_counts_all3 <- mutate_all(TElocal_counts_all3, function(x) as.numeric(as.character(x)))
 
 colClean1 <- function(TEtranscript_multi_counts){colnames(TElocal_counts_all3) <- gsub("Aligned.sortedByCoord.out.bam", "", colnames(TElocal_counts_all3)); TElocal_counts_all3 } 
-colClean3 <- function(TEtranscript_multi_counts){colnames(TElocal_counts_all3) <- gsub(".*?multi/", "", colnames(TElocal_counts_all3)); TElocal_counts_all3 } 
+colClean3 <- function(TEtranscript_multi_counts){colnames(TElocal_counts_all3) <- gsub(".*?multi_cf/", "", colnames(TElocal_counts_all3)); TElocal_counts_all3 } 
 
 TElocal_counts_all3 <- colClean1(TElocal_counts_all3)
-TElocal_counts_all3 <- colClean3(TElocal_counts_all3)#Filter Count Table
+TElocal_counts_all3 <- colClean3(TElocal_counts_all3) #Filter Count Table
 
-#Select dataset for comparison
-TAM_data <- sample_data %>% filter(Treatment == "TAM")
 
 #Subset data
-TElocal_counts_selected <- TElocal_counts_all3 %>% select(paste(TAM_data$Sample_ID))
+TElocal_counts_selected <- TElocal_counts_all3 %>% select(paste(sample_data$Sample_ID))
 
 #Filter low expressed genes or TEs before analysis
 idx <- rowSums(TElocal_counts_selected) >= 10
@@ -92,18 +88,16 @@ TElocal_counts_selected <- TElocal_counts_selected[idx,]
 # write.xlsx(TElocal_counts_selected_batch_correct_final, paste0("results/TElocal_counts_selected_batch_correct_final.xlsx"))
 
 #Analyzis parameters
-file_prefix = 'TELocal_data_comp'
-experiment = TElocal_counts_selected_batch_correct_final
+file_prefix = 'TELocal_LPS7d_vs_ctrl'
+experiment = TElocal_counts_selected
 experiment
-sample_data <- sample_data
 sample_data
 
 
 
 ###### ----- DESEQ2 ANALYSIS -----#####
 #Designs 
-#dds <- DESeqDataSetFromTximport(txi, colData = experiment, design = ~  Genotype) 
-dds <- DESeqDataSetFromMatrix(countData = experiment, colData = sample_data, design = ~ Genotype) 
+dds <- DESeqDataSetFromMatrix(countData = experiment, colData = sample_data, design = ~ Group) 
 
 #prefiltering on minimum of 5 reads (NOT REQUIRED AS DESEQ2 OPTIMIZES AND FILTERS AUTOMATICALLY)
 dds <- estimateSizeFactors(dds)
@@ -111,7 +105,7 @@ dds <- estimateSizeFactors(dds)
 # dds <- dds[idx,]
 
 #Setting the reference level (control group to compare against)
-#dds@colData@listData$Condition_1 <- relevel(dds@colData@listData$Condition_1, ref = "ctrl")
+dds@colData@listData$Group <- relevel(dds@colData@listData$Group, ref = "control_7d")
 
 
 ## Run DESeq analysis to gather differential expression results
@@ -149,7 +143,7 @@ vst <- vst(dds_run, blind=TRUE)
 
 ###### ----- PCA -----#####
 # Add nametags
-z <- plotPCA(vst, intgroup=c('Genotype','Timepoint'),ntop = 200)
+z <- plotPCA(vst, intgroup=c('Group'),ntop = 200)
 
 theme_PCA <- theme(aspect.ratio = 1, 
                    panel.background = element_blank(),
@@ -198,7 +192,7 @@ sig_res <- dds_result %>%
 sorted_DEGenes <- sig_res$gene
 
 # Export significant gene count data
-name_list <- c('gene', (paste0(dds_run$Genotype, "_",dds_run$Treatment, "_",dds_run$Timepoint, "_", dds_run$Sample_ID)))
+name_list <- c('gene', (paste0(dds_run$Group, "_", dds_run$Sample_ID)))
 name_list
 
 sig_export <- DS_norm_counts %>%
@@ -212,8 +206,8 @@ sig_export <- DS_norm_counts %>%
 
 #Manual Reordering of Columns (if necessary)
 reordered_index <- c(
-  grep("Group1", names(sig_export), ignore.case = T),
-  grep("Group2", names(sig_export), ignore.case = T))
+  grep("control_7d", names(sig_export), ignore.case = T),
+  grep("LPS_7d", names(sig_export), ignore.case = T))
 
 sig_export <- sig_export %>%
   select(c(1, reordered_index))
@@ -424,31 +418,20 @@ for (i in goi) {
 
 
 ###### ----- HEATMAP -----#####
-# Define a normalization function to calculate Z scores.
-cal_z_score <- function(x){
-  (x - mean(x)) / sd(x)
-}
-
 data_final <- sig_counts_TE %>% column_to_rownames('gene')
 data_subset_50 <- data_final %>% head(n = 50)
 data_subset_200 <- data_final %>% head(n = 200)
 data_subset_400 <- data_final %>% head(n = 400)
 
-# Normalize your data according to Z score using cal_z_score function.
-data_norm <- t(apply(data_final, 1, cal_z_score))
-data_subset_50 <-  t(apply(data_subset_50, 1, cal_z_score))
-data_subset_200 <- t(apply(data_subset_200, 1, cal_z_score))
-data_subset_400 <- t(apply(data_subset_400, 1, cal_z_score))
-#data_grouped_norm <- t(apply(data_grouped, 1, cal_z_score))
 
 #Heatmap setup
-gaps = c(2,4,6,8,10,12,14,16,18,20,22,24,26,28)
-clusters = 8
+gaps = c(3)
+clusters = 2
 dir.create(paste0('plots/heatmaps/',file_prefix))
 
 # Create heatmap
 pdf(file = paste0('plots/heatmaps/', file_prefix, '/','ALL_DEGs_pval05.pdf'), pointsize = 10)
-phm_full <- pheatmap(data_norm,
+phm_full <- pheatmap(data_final,
                      color = colorRampPalette(c("navy", "white", "firebrick3"))(41),
                      breaks = seq(-2, 2, by = 0.1),
                      kmeans_k = NA,
@@ -464,14 +447,12 @@ phm_full <- pheatmap(data_norm,
                      treeheight_col = 0,
                      treeheight_row = 10,
                      #cellwidth = 25,
-                     scale = 'row'
-                     #cellheight = 3,
-)
+                     scale = 'row')
 dev.off()
 
 
 pdf(file = paste0('plots/heatmaps/', file_prefix, '/','ALL_DEGs_labelled_pval05.pdf'), pointsize = 10, height = 200)
-phm_full <- pheatmap(data_norm,
+phm_full <- pheatmap(data_final,
                      color = colorRampPalette(c("navy", "white", "firebrick3"))(41),
                      breaks = seq(-2, 2, by = 0.1),
                      kmeans_k = NA,
@@ -488,8 +469,7 @@ phm_full <- pheatmap(data_norm,
                      treeheight_row = 10,
                      #cellwidth = 25,
                      scale = 'row',
-                     cellheight = 8
-)
+                     cellheight = 8)
 dev.off()
 
 pdf(file = paste0('plots/heatmaps/', file_prefix, '/','Top_50.pdf'), pointsize = 10, height = 10)
