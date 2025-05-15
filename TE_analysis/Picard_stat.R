@@ -1,9 +1,9 @@
 #### -------- INSTALLING AND LOADING PACKAGES ------- ####
-list.of.packages <- c("BiocGenerics","tximport","S4Vectors", "DESeq2", "biomaRt","data.table",
-                      "ggplot2", "ggsignif", "ggpubr", "sva", "devtools", "org.Hs.eg.db", "ggnewscale",
+list.of.packages <- c("BiocGenerics","tximport","S4Vectors", "DESeq2", "biomaRt",
+                      "ggplot2", "ggsignif", "ggpubr", "sva", "devtools", "org.Hs.eg.db", 
                       "org.Mm.eg.db", "limma","stringr","KEGGREST","ggrepel", "openxlsx", 'splitstackshape',
                       "fgsea","clusterProfiler","pheatmap","ggpubr","cowplot",'dplyr','janitor',
-                      "RColorBrewer",'AnnotationDbi', 'tidyverse','pheatmap', 'dendextend',"factoextra")
+                      "RColorBrewer",'AnnotationDbi', 'tidyverse','pheatmap', 'dendextend')
 
 new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
 if(length(new.packages)) install.packages(new.packages)
@@ -14,34 +14,38 @@ invisible(lapply(list.of.packages, library, character.only = TRUE))
 
 
 ###### ----- SETTING WORK DIRECTORY -----#####
-setwd("/Users/kiliankleemann/sciebo - Kleemann, Kilian (kleemann@uni-bonn.de)@uni-bonn.sciebo.de/AvM_KLK_BMDM_LPS_Chronic_Acute_FL_PE_241217_P2024-260-RNA")
+setwd("/Users/kiliankleemann/sciebo - Kleemann, Kilian (kleemann@uni-bonn.de)@uni-bonn.sciebo.de/Ivana_IFN_KI_experiments/Rayk_Aref_Ivana_MEF_DAXX_October_2024")
+
 #Import metadata
 sample_data <- read.xlsx("metadata.xlsx", sheet = 1)
 
-#Import Picard metrics
+
+###### ----- PICARD ALIGN STATS -----#####
+# Set the directory containing the .txt files
 file_path <- "Picard_metrics"
+
+# List all .txt files in the directory
 file_list <- list.files(path = file_path, pattern = "\\.txt$", full.names = TRUE)
+
+# Create an empty list to store dataframes
 data_picard <- data.frame()
-for (i in 1:12){
-  df <- read.delim(file_list[i], header=T, comment.char="#")
-  df <- df[-c(2:200),]
-  df$Sample_ID <- paste0(file_list[i])
-  data_picard <- rbind(df, data_picard)
-}
+for (i in 1:6){
+    df <- read.delim(file_list[i], header=T, comment.char="#")
+    df <- df[-c(2:200),]
+    data_picard <- rbind(df, data_picard)
+  }
+  
+file_list_name <- gsub("Picard_metrics/","",file_list)
+file_list_name <- gsub("_output_rna_metrics.txt","",file_list_name)
 
-#DF formatting
-data_picard$Sample_ID <- gsub("Picard_metrics/","",data_picard$Sample_ID)
-data_picard$Sample_ID <- gsub("_output_rna_metrics.txt","",data_picard$Sample_ID)
-
-#merge with metadata
+#Merge with metadata
+data_picard$Sample_ID <- file_list_name
 data_picard_merge <- left_join(data_picard,sample_data,'Sample_ID')
-
 data_picard_merge$PF_BASES <- as.numeric(data_picard_merge$PF_BASES)
 data_picard_merge$PF_ALIGNED_BASES <- as.numeric(data_picard_merge$PF_ALIGNED_BASES)
 
 data_picard_merge <- data_picard_merge %>% column_to_rownames('Sample_ID')
-data_picard_merge <- data_picard_merge[,-c(3,16,28:32)]
-picard_stats <- colnames(data_picard_merge)
+data_picard_merge <- data_picard_merge[,-c(3,16,28:35,37)]
 
 data_picard_merge <- data_picard_merge %>% rownames_to_column('Sample_ID')
 
@@ -54,28 +58,27 @@ pointSize =30
 for (i in picard_stats) {
   column_sym <- sym(i)
   barplot <- ggplot(data_picard_merge, aes(x = Sample_ID, y = !!column_sym)) + 
-    geom_bar(position = 'dodge', stat = 'summary', fun = mean, width = 0.7, colour="black", fill= "purple3") +
+    geom_bar(position = 'dodge', stat = 'summary', fun = mean, width = 0.7, colour="black") +
     expand_limits(x = 0, y = 0) +
     theme(panel.spacing = unit(1, "lines")) +
-    labs(x = NULL, y = c(i)) +
+    labs(x = NULL, y = c("Count")) +
     ggtitle(str_wrap(paste0(i), width = 30))+
     theme(text = element_text(size = pointSize, colour = "black"),
-          rect = element_blank(),
-          line = element_line(linewidth = lineWidth, colour = "black"),
-          plot.title  = element_text(color="black", size=pointSize),
-          axis.title  = element_text(size = pointSize, colour = "black"),
-          axis.text.x  = element_text(size = pointSize , colour = "black", angle = 60, hjust = 1),
-          axis.text.y  = element_text(size = pointSize , colour = "black"),
-          legend.position = "none",
-          panel.grid.major = element_blank(),
-          panel.grid.minor = element_blank(),
-          legend.title = element_blank(),
-          legend.text = element_text(size = pointSize , colour = "black"),
-          # legend.key.height = unit(0.1, "cm"),
-          # legend.key.width = unit(0.2, "cm"),
-          axis.line = element_line(linewidth = lineWidth, colour = "black"),
-          plot.margin = unit(c(0.5, 0.5, 0.5, 0.5), "cm")) + 
-    scale_y_continuous(expand = c(0, 0, .05, 0))
+      rect = element_blank(),
+      line = element_line(linewidth = lineWidth, colour = "black"),
+      plot.title  = element_text(color="black", size=pointSize),
+      axis.title  = element_text(size = pointSize, colour = "black"),
+      axis.text.x  = element_text(size = pointSize , colour = "black", angle = 45, hjust = 1),
+      axis.text.y  = element_text(size = pointSize , colour = "black"),
+      legend.position = "none",
+      panel.grid.major = element_blank(),
+      panel.grid.minor = element_blank(),
+      legend.title = element_blank(),
+      legend.text = element_text(size = pointSize , colour = "black"),
+      # legend.key.height = unit(0.1, "cm"),
+      # legend.key.width = unit(0.2, "cm"),
+      axis.line = element_line(linewidth = lineWidth, colour = "black"),
+      plot.margin = unit(c(0.5, 0.5, 0.5, 0.5), "cm")) #+ scale_y_continuous(expand = c(0, 0, .05, 0))
   
   pdf(file = paste0('plots/barplots/',"Picard_stats_per_sample",'/',i,'.pdf'), pointsize = 10, width = 10, height= 10)
   print(barplot)
@@ -85,14 +88,8 @@ for (i in picard_stats) {
 
 
 #Per condition
-#merge with metadata
-data_picard_merge$Sample_ID <- file_list_name
-data_picard_merge <- left_join(data_picard,sample_data,'Sample_ID')
-data_picard_merge$PF_BASES <- as.numeric(data_picard_merge$PF_BASES)
-data_picard_merge$PF_ALIGNED_BASES <- as.numeric(data_picard_merge$PF_ALIGNED_BASES)
-data_picard_merge$Condition <- paste0(data_picard_merge$treatment,"_",data_picard_merge$timepoint)
-
 dir.create(paste0('plots/barplots/',"Picard_stats_per_condition"))
+data_picard_merge$Condition <- data_picard_merge$Genotype
 
 for (i in picard_stats) {
   formula <- as.formula(paste(i, "~ Condition"))
