@@ -68,6 +68,33 @@ cat sample_list.txt | while read sample; do
 	--outTmpDir /media/kilian/OS/STAR_tmp
 done
 
+mkdir -p BAM_files_multi
+
+while read sample; do
+  TMPDIR="/media/kilian/OS1/STAR_tmp_${sample}"
+
+  rm -rf "$TMPDIR"   # safety cleanup in case of previous crash
+
+  STAR --runThreadN 8 \
+       --readFilesIn fastq_files/${sample}_R1_001.fastq.gz fastq_files/${sample}_R2_001.fastq.gz \
+       --genomeDir /media/kilian/OS1/References/STAR_index_hg38 \
+       --outSAMtype BAM SortedByCoordinate \
+       --runMode alignReads \
+       --outFilterMultimapNmax 100 \
+       --outMultimapperOrder Random \
+       --winAnchorMultimapNmax 100 \
+       --outFilterMismatchNmax 3 \
+       --alignEndsType EndToEnd \
+       --alignIntronMax 1 \
+       --alignMatesGapMax 350 \
+       --outFileNamePrefix BAM_files_multi/${sample} \
+       --readFilesCommand zcat \
+       --outSAMunmapped Within \
+       --outTmpDir "$TMPDIR"
+
+  rm -rf "$TMPDIR"   # optional, STAR usually deletes it itself
+done < sample_list.txt
+
 #Index files
 cat sample_list.txt | while read sample; do
 	samtools index BAM_files_multi_trimmed/${sample}Aligned.sortedByCoord.out.bam
